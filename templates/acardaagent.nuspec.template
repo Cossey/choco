@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>acardaoutboundagent</id>
+    <version>%fileversion%</version>
+    <packageSourceUrl>https://github.com/Cossey/chocopackages</packageSourceUrl>
+	  <owners>Stewart Cossey</owners>
+    <title>Acarda Outbound Team Edition Agent</title>
+    <authors>Innovasoft Limited</authors>
+    <projectUrl>http://www.acarda.com/live-outbound-calling/</projectUrl>
+    <iconUrl>https://cdn.rawgit.com/Cossey/storage/8cae72f8/images/logos/acardaoutboundagent.png</iconUrl>
+    <copyright>2018 Innovasoft Limited</copyright>
+    <tags>acardaoutboundteam acardaoutbound telemarketing outbound</tags>
+    <summary>Outbound Call Center and Telemarketing Dialer for Teams.</summary>
+	  <description>Agent Module for Acarda Outbound Team Edition.
+
+      Released %releasedate%.
+
+	_This software requires a licensed Acarda Outbound Server instance for the agent to connect to._
+	
+	## Package Parameters
+	The following package parameters are supported:
+	
+	* `/server:` - Set the Acarda Outbound Server Address
+	* `/port:` - Set the Acarda Outbount Server Port
+	
+	> If you do not specify a Server Address parameter then the software will ask you for the Server Address on first run.
+	
+	To pass parameters, use `--params="/server:server.address.com /port:4567"`.
+	  </description>
+    <dependencies>
+      <dependency id="dotnet3.5" version="3.5.20160716" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools/**" target="tools" />
+  </files>
+</package>

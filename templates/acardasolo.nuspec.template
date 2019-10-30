@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>acardaoutboundsolo</id>
+    <version>%fileversion%</version>
+    <packageSourceUrl>https://github.com/Cossey/chocopackages</packageSourceUrl>
+    <owners>Stewart Cossey</owners>
+    <title>Acarda Outbound Solo Edition</title>
+    <authors>Innovasoft Limited</authors>
+    <projectUrl>http://www.acarda.com/live-outbound-calling/</projectUrl>
+    <iconUrl>https://cdn.rawgit.com/Cossey/storage/906b6845/images/logos/acardaoutboundsolo.png</iconUrl>
+    <copyright>2018 Innovasoft Limited</copyright>
+    <tags>acardaoutboundsolo acardaoutbound telemarketing outbound</tags>
+    <summary>Outbound Call Center and Telemarketing Dialer for one person.</summary>
+    <description>Outbound Call Center and Telemarketing Dialer for one person.
+
+      Released %releasedate%.
+    </description>
+    <dependencies>
+      <dependency id="dotnet3.5" version="3.5.20160716" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools/**" target="tools" />
+  </files>
+</package>
