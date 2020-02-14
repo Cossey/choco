@@ -7,7 +7,7 @@ function BuildTemplates ($name, $hash, $url, $ver, $rls) {
     $citemplate | Out-File "$tempout/ao/tools/chocolateyInstall.ps1"
 
     $nstemplate = Get-Content "$PSScriptRoot/templates/${name}.nuspec.template" -Raw
-    $nstemplate = $nstemplate -replace "%fileversion%", "$ver"
+    $nstemplate = $nstemplate -replace "%fileversion%", "${ver}00"
     $nstemplate = $nstemplate -replace "%releasedate%", "$rls"
     $nstemplate | Out-File "$tempout/ao/${name}.nuspec"
 }
