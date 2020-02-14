@@ -5,7 +5,7 @@
     <version>%fileversion%</version>
     <packageSourceUrl>https://github.com/Cossey/chocopackages</packageSourceUrl>
     <owners>Stewart Cossey</owners>
-    <title>Burnaware Free (Install)</title>
+    <title>Burnaware Free</title>
     <authors>Burnaware</authors>
     <projectUrl>http://www.burnaware.com/</projectUrl>
     <copyright>2018 Burnaware</copyright>

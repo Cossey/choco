@@ -60,7 +60,7 @@ $webversion = [regex]::match($currentversion.Content, "BurnAware Free.*Version (
 if ($oldversion -ne $webversion) {
     Write-Host "The versions $oldversion and $webversion are different!"
     Write-Host Build Download URLs...
-    $freeurl = [regex]::match($currentversion.Content, "blockquote class=`"well`".*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+    $freeurl = [regex]::match($currentversion.Content, "blockquote class=`"well`".*?href=`".*?`".*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
     $prourl = [regex]::match($currentversion.Content, "BurnAware Professional.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
     $premiumurl = [regex]::match($currentversion.Content, "BurnAware Premium.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
