@@ -4,7 +4,7 @@ $local:temp = "${PSScriptRoot}/temp"
 
 $progressPreference = 'silentlyContinue'
 
-. ".\common.ps1"
+. "${PSScriptRoot}/common.ps1"
 
 while ($true) {
     Write-Host "-----------------------------"
