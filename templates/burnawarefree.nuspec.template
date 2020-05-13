@@ -3,7 +3,7 @@
   <metadata>
     <id>burnawarefree</id>
     <version>%fileversion%</version>
-    <packageSourceUrl>https://github.com/Cossey/chocopackages</packageSourceUrl>
+    <packageSourceUrl>https://github.com/Cossey/choco</packageSourceUrl>
     <owners>Stewart Cossey</owners>
     <title>Burnaware Free</title>
     <authors>Burnaware</authors>
@@ -15,19 +15,7 @@
     <tags>burnaware cd dvd iso</tags>
     <summary>BurnAware is a full-featured and free burning software to create CD, DVD and Blu-ray of all types, including M-Disc.</summary>
     <description>BurnAware is a full-fledged, easy-to-use burning software which allows users to write all types of files such as digital photos, pictures, archives, documents, music and videos to CDs, DVDs and Blu-ray Discs (including M-Disc). With BurnAware, you also be able to create bootable or multisession discs, high-quality Audio CDs and Video DVDs, make and burn ISO images, copy and backup discs, extract audio tracks, erase and verify data, recover data from multisession or unreadable discs.</description>
-    <releaseNotes>Released %releasedate%
-	
-New features:
-%newfeatures%
-
-Enhancements:
-%enhancements%
-
-Bug Fixes:
-%bugfixes%
-
-</releaseNotes>
-
+    <releaseNotes>%description%</releaseNotes>
   </metadata>
   <files>
     <file src="tools/**" target="tools" />

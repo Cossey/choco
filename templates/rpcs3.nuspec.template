@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>rpcs3</id>
+    <version>%fileversion%</version>
+    <packageSourceUrl>https://github.com/Cossey/choco</packageSourceUrl>
+    <owners>Stewart Cossey</owners>
+    <title>RPCS3</title>
+    <authors>Nekotekina and Contributors</authors>
+    <projectUrl>https://rpcs3.net/</projectUrl>
+    <iconUrl>https://rpcs3.net/img/icons/menu/logo.png</iconUrl>
+    <copyright>GNU GPLv2 License</copyright>
+    <licenseUrl>https://raw.githubusercontent.com/RPCS3/rpcs3/master/LICENSE</licenseUrl>
+    <tags>emulator sony playstation3 ps3</tags>
+    <summary>RPCS3 - Playstation 3 Emulator.</summary>
+    <description>RPCS3 is a multi-platform open-source Sony PlayStation 3 emulator and debugger written in C++ for Windows, Linux and BSD.</description>
+  </metadata>
+  <files>
+    <file src="tools/**" target="tools" />
+  </files>
+</package>
