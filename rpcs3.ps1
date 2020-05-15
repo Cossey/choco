@@ -13,7 +13,7 @@ if ($oldversion -eq "~") {
 
 $dljson = (Invoke-WebRequest "https://api.github.com/repos/RPCS3/rpcs3-binaries-win/releases/latest").Content
 $dlinfo = ConvertFrom-Json $dljson
-$version = $dlinfo.name.Replace('-', '.')
+$version = $dlinfo.name
 
 if ($oldversion -ne $version) {
     $files = $dlinfo.assets
