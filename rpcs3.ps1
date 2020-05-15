@@ -6,6 +6,10 @@ $tempfolder = "$temp/rpcs3/"
 $verfile = "rpcs3.ver"
 $oldversion = GetLastVersion $verfile
 
+if ($oldversion -eq "~") {
+    Write-Host "Skip Updating Package"
+    break
+}
 
 $dljson = (Invoke-WebRequest "https://api.github.com/repos/RPCS3/rpcs3-binaries-win/releases/latest").Content
 $dlinfo = ConvertFrom-Json $dljson

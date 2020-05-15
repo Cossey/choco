@@ -5,6 +5,10 @@ $tempfolder = "$temp/ba/"
 $verfile = "burnaware.ver"
 $oldversion = GetLastVersion $verfile
 
+if ($oldversion -eq "~") {
+    Write-Host "Skip Updating Package"
+    break
+}
 
 $currentversionurl = "www.burnaware.com/download.html"
 $whatsnewurl = "www.burnaware.com/whats-new.html"
