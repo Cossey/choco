@@ -15,6 +15,8 @@ $dljson = (Invoke-WebRequest "https://api.github.com/repos/RPCS3/rpcs3-binaries-
 $dlinfo = ConvertFrom-Json $dljson
 $version = $dlinfo.name
 
+$nugetversion = ConvertDashVersion $version 'alpha'
+
 if ($oldversion -ne $version) {
     $files = $dlinfo.assets
     $dlfile = $null
@@ -38,7 +40,7 @@ if ($oldversion -ne $version) {
         $sha256 = $sha256.Trim()
     }
 
-    BuildTemplate $tempfolder $templatename $sha256 $dlfile $version ""
+    BuildTemplate $tempfolder $templatename $sha256 $dlfile $nugetversion ""
     PackAndClean $tempfolder
     NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)
 } else {

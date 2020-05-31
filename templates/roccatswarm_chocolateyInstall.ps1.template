@@ -1,0 +1,32 @@
+$ErrorActionPreference = 'Stop';
+$toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+$url        = "%downloadurl%"
+
+$packageArgs = @{
+  packageName   = $env:ChocolateyPackageName
+  destination  = "${env:TEMP}/roccatswarm"
+  url           = $url
+  checksum      = '%hash%'
+  checksumType  = 'sha256'
+}
+
+Install-ChocolateyZipPackage @packageArgs
+
+$extractedFileExes = Get-ChildItem -Path "${env:TEMP}/roccatswarm" -Filter "*.exe"
+$installExe = $extractedFileExes[0].Name
+
+$response = Join-Path $toolsDir 'install.iss'
+
+# This an InstallShield installer, requiring a response file (.ISS) for silent
+# installation.
+
+$installArgs = @{
+  packageName  = $env:ChocolateyPackageName
+  fileType     = 'exe'
+  file          = "${env:TEMP}/roccatswarm/$installExe"
+  silentArgs   = "/s /f1`"$response`""
+}
+
+Install-ChocolateyInstallPackage @installArgs
+
+Remove-Item -Path "${env:TEMP}/roccatswarm" -Recurse

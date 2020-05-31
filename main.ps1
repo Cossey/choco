@@ -12,6 +12,7 @@ while ($true) {
 
     & ${PSScriptRoot}/burnaware.ps1
     & ${PSScriptRoot}/rpcs3.ps1
+    & ${PSScriptRoot}/roccatswarm.ps1
 
     if (-not (Test-Path env:DELAY)) {break}
     Start-Sleep -Seconds ([int]$Env:DELAY * 60)
