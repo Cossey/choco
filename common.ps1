@@ -128,7 +128,7 @@ function PackageError($message) {
 }
 
 function SendPushover($title, $message) {
-    if ((-not (Test-Path Env:AKEY)) || (-not (Test-Path Env:UKEY))) {
+    if ((-not (Test-Path Env:AKEY)) -or (-not (Test-Path Env:UKEY))) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
     } else {
         Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle $title -Message $message
