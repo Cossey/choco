@@ -13,7 +13,8 @@ while ($true) {
     & ${PSScriptRoot}/rpcs3.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
     
+    Write-Host "-----------------------------"
+    
     if (-not (Test-Path env:DELAY)) {break}
     Start-Sleep -Seconds ([int]$Env:DELAY * 60)
-    Write-Host "-----------------------------"
 }

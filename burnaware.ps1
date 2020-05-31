@@ -72,21 +72,21 @@ $bugfixes
         $freehash = $result[0]
         $freesize = $result[1]
         BuildTemplate $tempfolder "burnawarefree" $freehash $freeurl $webversion $description
-        PackAndClean $tempfolder
+        $packresult = PackAndClean $tempfolder
 
         Write-Host "Burnaware Pro" -ForegroundColor Yellow
         $result = HashAndSizeFromFileURL $prourl
         $prohash = $result[0]
         $prosize = $result[1]
         BuildTemplate $tempfolder "burnawarepro" $prohash $prourl $webversion $description
-        PackAndClean $tempfolder
+        $packresult = PackAndClean $tempfolder
 
         Write-Host "Burnaware Premium" -ForegroundColor Yellow
         $result = HashAndSizeFromFileURL $premiumurl
         $prehash = $result[0]
         $presize = $result[1]
         BuildTemplate $tempfolder "burnawarepremium" $prehash $premiumurl $webversion $description
-        PackAndClean $tempfolder
+        $packresult = PackAndClean $tempfolder
 
         NotePackageUpdateMsg $webversion $verfile "Burnaware Packages updated to $webversion`r`nFree: $(GetFileSize $freesize)`r`nPro: $(GetFileSize $prosize)`r`nPre: $(GetFileSize $presize)"
     } else {

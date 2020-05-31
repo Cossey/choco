@@ -37,7 +37,7 @@ if ($oldversion -ne "~") {
         }
 
         BuildTemplate $tempfolder $templatename $sha256 $dlfile $nugetversion ""
-        PackAndClean $tempfolder
+        $packresult = PackAndClean $tempfolder
         NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)
     } else {
         Write-Host "No New Version"

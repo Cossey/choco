@@ -34,7 +34,7 @@ if ($oldversion -ne "~") {
         $filesize = $fileinfo[1]
 
         BuildTemplate $tempfolder $templatename $filehash $downloadurl $version $changelog
-        PackAndClean $tempfolder
+        $packresult = PackAndClean $tempfolder
         NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)
     } else {
         Write-Host "No New Version"

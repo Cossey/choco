@@ -56,13 +56,31 @@ function PackAndClean ($tempfolder) {
     }
     Set-Location -Path $tempfolder
     choco pack
+    if ($LASTEXITCODE -ne "0") {
+        if ("$env:debug" -ne "true") {
+            Remove-Item -Path "$tempfolder" -Recurse -Force
+        }
+        return $false
+    }
     if ("$env:debug" -ne "true") {
         choco push --api-key=$Env:CKEY
+        if ($LASTEXITCODE -ne "0") {
+            Write-Host "Retrying..."
+            choco push --api-key=$Env:CKEY
+            if ($LASTEXITCODE -ne "0") {
+                Write-Host "Could not push to chocolatey"
+                if ("$env:debug" -ne "true") {
+                    Remove-Item -Path "$tempfolder" -Recurse -Force
+                }
+                return $false
+            }
+        }
     }
     Set-Location -Path $temp
     if ("$env:debug" -ne "true") {
-        Remove-Item -Path $tempfolder -Recurse
+        Remove-Item -Path "$tempfolder" -Recurse -Force
     }
+    return $true
 }
 
 function JoinPath ($path) {
@@ -95,11 +113,24 @@ function ConvertDashVersion ($version, $dashpostfix) {
 
 function NotePackageUpdateMsg ($version, $verfile, $message) {
     $version | Out-File "${datapath}/${verfile}" -NoNewline
-    Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle "Package Updated" -Message "$message"
+    SendPushover "Package Updated" "$message"
+    Write-Host "Updated to `"$version`""
 }
 
 function NotePackageUpdate ($version, $verfile, $name, $size) {
     $version | Out-File "${datapath}/${verfile}" -NoNewline
-    Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle "Package Updated" -Message "$name updated to $version [$size]"
+    SendPushover "Package Updated" "$name updated to $version [$size]"
     Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
+}
+
+function PackageError($message) {
+    SendPushover "Package Error" "$message"
+}
+
+function SendPushover($title, $message) {
+    if (-not (Test-Path Env:AKEY) || -not (Test-Path Env:UKEY)) {
+        Write-Host "Pushover Ignored: No AKEY or UKEY provided"
+    } else {
+        Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle $title -Message $message
+    }
 }
