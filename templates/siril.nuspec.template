@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>siril</id>
+    <version>%fileversion%</version>
+    <owners>Stewart Cossey</owners>
+    <packageSourceUrl>https://github.com/Cossey/choco</packageSourceUrl>
+    <title>SIRIL</title>
+    <authors>Vincent Hourdin, Cyril Richard, François Meyer and Contributors</authors>
+    <projectUrl>https://www.siril.org/</projectUrl>
+    <projectSourceUrl>https://gitlab.com/free-astro/siril</projectSourceUrl>
+    <bugTrackerUrl>https://gitlab.com/free-astro/siril/-/issues</bugTrackerUrl>
+    <copyright>2012-2020 Team free-astro</copyright>
+    <licenseUrl>https://gitlab.com/free-astro/siril/-/blob/master/LICENSE.md</licenseUrl>
+	  <iconUrl>https://data.cossey.nz/packages/icons/siril.png</iconUrl>
+    <docsUrl>https://free-astro.org/siril_doc-en/</docsUrl>
+    <tags>siril astronomical image processing</tags>
+    <summary>Free astronomical image processing software</summary>
+    <description>SIRIL is an astronomical image processing tool.
+
+      It is specially tailored for noise reduction and improving the signal/noise ratio of an image from multiple captures, as required in astronomy.
+      
+      SIRIL can align automatically or manually, stack and enhance pictures from various file formats, even image sequence files (films and SER files).
+      
+      **WHO SHOULD USE SIRIL?**  
+      SIRIL is targeted to amateur astronomers having acquired images and wanting to process them in a semi-automatic way.
+      
+      **FEATURES**  
+      SIRIL uses modern and powerful processing algorithms running in parallel in order to speed up the time of processing.
+      
+      **WHAT ARE THE ADVANTAGES IN USING SIRIL?**  
+      Nearly the whole processing chain is available in SIRIL. With only one software you can produce high quality images for print or web diffusion.
+      
+      **DEEP SKY**  
+      SIRIL is fully capable to pre-process and process astronomic images by offering to the users a large set of dedicated algorithms. So far, due to the high level of its star detection algorithm it is quite performant to process deep-sky images in an easy way.
+      
+      **LUCKY IMAGING**  
+      Thanks to the ability to directly process SER videos, SIRIL is adapted to the deep-sky lucky imaging technic. All algorithms work to use all cores of the computer, making it possible to process more than 60,000 frames with minimal effort.
+      
+      **SOME HIGHLIGHTS OF SIRIL**  
+      New features are being introduced quite regularly. Here is a list of main features:
+      * Native image format support
+      * Image conversion (to the native FITS format only)
+      * Images pre-processing with bias, darks and flats masters
+      * Image registration
+      * Registered sequence export
+      * Image stacking, with optional additive or multiplicative normalization
+      * Enhancement and processing of final images
+      * Image compositing tool, combining and aligning multiple channels
+      * Plotting various pieces of information about an image sequence</description>
+    <releaseNotes>%description%</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools/**" target="tools" />
+  </files>
+</package>

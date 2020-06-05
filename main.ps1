@@ -12,7 +12,8 @@ while ($true) {
     & ${PSScriptRoot}/burnaware.ps1
     & ${PSScriptRoot}/rpcs3.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
-    
+    & ${PSScriptRoot}/siril.ps1
+
     Write-Host "-----------------------------"
     
     if (-not (Test-Path env:DELAY)) {break}
