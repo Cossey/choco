@@ -45,7 +45,30 @@ function HashAndSizeFromFileURL ($url) {
     $file = (Get-Item $out).length
     Write-Host "File Size `"$file`" Hash `"$hash`"" -ForegroundColor Green
     Remove-Item -path $out
+    Write-Host "Removed temporary file `"$out`""
     return @($hash, $file)
+}
+
+function ExtractZipFromURL ($url, $tempfolder) {
+    try {
+        $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+        New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
+        $out = "${temp}/${randomstring}"
+        Write-Host "Downloading File to `"$out`"..."
+        Invoke-WebRequest -Uri $url -outfile $out
+        $size = (Get-Item $out).length
+        Write-Host "Downloaded File - $size bytes, Extracting file"
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($out, "${tempfolder}/tools")
+        Write-Host "Extraction complete"
+        Remove-Item -Path $out
+        Write-Host "Removed temporary file `"$out`""
+        return $true
+    }
+    catch {
+        Write-Host "Error Extracting Zip From `"$url`""
+        PackageError "Package: $tempfolder`nError Extracting from URL: $url"
+        return $false
+    }
 }
 
 function PackAndClean ($tempfolder) {
@@ -97,6 +120,18 @@ function JoinPath ($path) {
     $joinedpathstring 
 }
 
+function PackageName ($title) {
+    Write-Host "[PACKAGE $title UPDATER]" -ForegroundColor Yellow
+}
+
+function CheckSkip ($version) {
+    if ($version -eq "~") {
+        Write-Host "Skip Updating Package"
+        return $true
+    }
+    return $false
+}
+
 function GetLastVersion ($verfile) {
     Get-Content -Path "${datapath}/${verfile}" -Raw -ErrorAction Ignore
 }
@@ -119,12 +154,34 @@ function NotePackageUpdateMsg ($version, $verfile, $message) {
 
 function NotePackageUpdate ($version, $verfile, $name, $size) {
     $version | Out-File "${datapath}/${verfile}" -NoNewline
-    SendPushover "Package Updated" "$name updated to $version [$size]"
-    Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
+    if ($null -eq $size) {
+        Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
+        SendPushover "Package Updated" "$name updated to $version [$size]"
+    } else {
+        Write-Host "`"$name`" updated to `"$version`""
+        SendPushover "Package Updated" "$name updated to $version"
+    }
 }
 
 function PackageError($message) {
     SendPushover "Package Error" "$message"
+}
+
+function VersionNotNew($oldversion, $newversion) {
+    if ($oldversion -eq $newversion) {
+        Write-Host "No New Version"
+        return $true
+    }
+    return $false
+}
+
+function VersionNotValid($version, $packagename) {
+    if ($version -match "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+?|\-[a-z]+[0-9]+)?") {
+        return $false
+    }
+    Write-Host "Cannot validate version number"
+    PackageError "Package: $packagename`nInvalid Version: $version"
+    return $true
 }
 
 function SendPushover($title, $message) {
@@ -133,4 +190,27 @@ function SendPushover($title, $message) {
     } else {
         Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle $title -Message $message
     }
+}
+
+function ProcessChangelog ($data) {
+    $data = $data -Replace "(?ms)<a.*?>(.*?)</a>",'$1'  #Remove any link tags and replace with the links inner text
+    $data = $data -Replace "</li>","" #Remove closing li tag
+    $data = $data -Replace "<li>","*" #Convert to *
+    $data = $data -replace "&#8226;", "*" #Convert to *
+    $data = $data -replace "<b>-</b>", "*" #Convert to *
+    $data = $data -replace "<br />", "" #Remove line break tag
+    $data = $data -replace "<br/>", "" #Remove line break tag
+    $data = $data -replace "</p>", "" #Remove closing p tag
+    $data = $data -replace "<ul>", "" #Remove ul tag
+    $data = $data -replace "</ul>", "" #Remove ul tag
+    $data = $data -replace "</span>", "" #Remove span tag
+    $data = $data -replace "<span.*?>", "" #Remove span tag
+    $data = $data -replace "<div.*?>", "" #Remove div tag
+    $data = $data -replace "</div>", "" #Remove div tag
+    $data = $data -creplace '(?m)^\s*\r?\n','' #Remove any * on lines of their own
+    
+    $data = $data -creplace '(?m)^\*\S+','*' #Make sure any lines starting with * has one whitespace character after
+    $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
+    $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
+    $data
 }
