@@ -8,7 +8,7 @@
     <title>ROCCAT Swarm</title>
     <authors>ROCCAT</authors>
     <projectUrl>https://en.roccat.org/Support</projectUrl>
-    <iconUrl>https://github.com/Cossey/storage/raw/master/images/logos/roccatswarm.png</iconUrl>
+    <iconUrl>https://data.cossey.nz/packages/icons/roccatswarm.png</iconUrl>
     <docsUrl>https://en.roccat.org/Support/Product/ROCCAT-Swarm</docsUrl>
     <copyright>ROCCAT</copyright>
     <releaseNotes>%description%</releaseNotes>
