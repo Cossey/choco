@@ -30,8 +30,9 @@ $releasedate = ([regex]::match($releasepagedata.Content, "<b>Release date: (.*?)
 
 Write-Host Release Date $releasedate
 
-$chanagelog = [regex]::match($releasepagedata.Content, "What?'s new.*?What?'s new.*?</h2>(.*?)(<!--|</div>)", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
-$chanagelog = ProcessChangelog $chanagelog
+$changelog = [regex]::match($releasepagedata.Content, "What?'s new.*?What?'s new.*?</h2>(.*?)(<!--|</div>)", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+
+$changelog = (ProcessChangelog $changelog)
 
 $description = @"
 Released $releasedate
