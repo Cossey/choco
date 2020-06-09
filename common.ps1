@@ -71,27 +71,28 @@ function ExtractZipFromURL ($url, $tempfolder) {
     }
 }
 
-function PackAndClean ($tempfolder) {
+function PackAndClean ($tempfolder, $ignorepushresult) {
     if ("$env:debug" -ne "true") {
         Write-Host "Pack, Push and Clean `"$tempfolder`""
     } else {
         Write-Host "Pack `"$tempfolder`""
     }
-    Set-Location -Path $tempfolder
+    Set-Location -Path "$tempfolder"
     choco pack
     if ($LASTEXITCODE -ne "0") {
         if ("$env:debug" -ne "true") {
+            Write-Host "Pack return exit code $LASTEXITCODE"
             Remove-Item -Path "$tempfolder" -Recurse -Force
         }
         return $false
     }
     if ("$env:debug" -ne "true") {
         choco push --api-key=$Env:CKEY
-        if ($LASTEXITCODE -ne "0") {
-            Write-Host "Retrying..."
+        if ($LASTEXITCODE -ne "0" -and ($null -eq $ignorepushresult -or $ignorepushresult -ne "true")) {
+            Write-Host "Exit code $LASTEXITCODE, Retrying..."
             choco push --api-key=$Env:CKEY
             if ($LASTEXITCODE -ne "0") {
-                Write-Host "Could not push to chocolatey"
+                Write-Host "Could not push to chocolatey. Exit code $LASTEXITCODE"
                 if ("$env:debug" -ne "true") {
                     Remove-Item -Path "$tempfolder" -Recurse -Force
                 }

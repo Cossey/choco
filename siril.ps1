@@ -49,6 +49,7 @@ Move-Item -Path "$tempfolder/tools/gspawn-win64-helper-console.exe.ignore" -Dest
 Move-Item -Path "$tempfolder/tools/gspawn-win64-helper.exe.ignore" -Destination "$tempfolder/tools/bin/gspawn-win64-helper.exe.ignore"
 Move-Item -Path "$tempfolder/tools/siril.exe.gui" -Destination "$tempfolder/tools/bin/siril.exe.gui"
 
-if (!(PackAndClean $tempfolder)) {return}
+#Ignore Push errors for this - siril seems to cause HTTP524, probably due to cloudflare or chocolatey.org website.
+if (!(PackAndClean $tempfolder $true)) {return}
 
 NotePackageUpdate $version $verfile $templatename ""
