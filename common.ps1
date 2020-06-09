@@ -50,17 +50,17 @@ function HashAndSizeFromFileURL ($url) {
 }
 
 function ExtractZipFromURL ($url, $tempfolder) {
+    $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+    $out = "${temp}/${randomstring}"
     try {
-        $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
         New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-        $out = "${temp}/${randomstring}"
         Write-Host "Downloading File to `"$out`"..."
         Invoke-WebRequest -Uri $url -outfile $out
         $size = (Get-Item $out).length
-        Write-Host "Downloaded File - $size bytes, Extracting file"
+        Write-Host "Downloaded File - $size bytes, Extracting file..."
         [System.IO.Compression.ZipFile]::ExtractToDirectory($out, "${tempfolder}/tools")
         Write-Host "Extraction complete"
-        Remove-Item -Path $out
+        
         Write-Host "Removed temporary file `"$out`""
         return $true
     }
@@ -68,40 +68,47 @@ function ExtractZipFromURL ($url, $tempfolder) {
         Write-Host "Error Extracting Zip From `"$url`""
         PackageError "Package: $tempfolder`nError Extracting from URL: $url"
         return $false
+    } finally {
+        Remove-Item -Path $out
     }
 }
 
 function PackAndClean ($tempfolder, $ignorepushresult) {
-    if ("$env:debug" -ne "true") {
-        Write-Host "Pack, Push and Clean `"$tempfolder`""
-    } else {
-        Write-Host "Pack `"$tempfolder`""
-    }
     Set-Location -Path "$tempfolder"
-    choco pack
+    Write-Host "Packing `"$tempfolder`"..."
+    $result = (choco pack)
     if ($LASTEXITCODE -ne "0") {
         if ("$env:debug" -ne "true") {
-            Write-Host "Pack return exit code $LASTEXITCODE"
+            Write-Host "Pack return exit code $LASTEXITCODE`n-----------`n$result`n-----------"
             Remove-Item -Path "$tempfolder" -Recurse -Force
         }
         return $false
     }
     if ("$env:debug" -ne "true") {
-        choco push --api-key=$Env:CKEY
-        if ($LASTEXITCODE -ne "0" -and ($null -eq $ignorepushresult -or $ignorepushresult -ne "true")) {
-            Write-Host "Exit code $LASTEXITCODE, Retrying..."
-            choco push --api-key=$Env:CKEY
+        Write-Host "Pushing..."
+        $result = (choco push --api-key=$Env:CKEY)
+        if ($LASTEXITCODE -ne "0") {
+            Write-Host "Exit code $LASTEXITCODE`n-----------`n$result`n----------`nRetrying..."
+            $result = (choco push --api-key=$Env:CKEY)
             if ($LASTEXITCODE -ne "0") {
-                Write-Host "Could not push to chocolatey. Exit code $LASTEXITCODE"
-                if ("$env:debug" -ne "true") {
-                    Remove-Item -Path "$tempfolder" -Recurse -Force
+                Write-Host "Could not push to chocolatey. Exit code $LASTEXITCODE`n----------`n$result`n----------"
+
+                if (($null -eq $ignorepushresult -or $ignorepushresult -ne "true")) {
+                    Write-Host "Assume Package success due to override."
+                } else {
+                    
+                    if ("$env:debug" -ne "true") {
+                        Write-Host "Cleaning..."
+                        Remove-Item -Path "$tempfolder" -Recurse -Force
+                    }
+                    return $false
                 }
-                return $false
             }
         }
     }
     Set-Location -Path $temp
     if ("$env:debug" -ne "true") {
+        Write-Host "Cleaning..."
         Remove-Item -Path "$tempfolder" -Recurse -Force
     }
     return $true
@@ -148,13 +155,17 @@ function ConvertDashVersion ($version, $dashpostfix) {
 }
 
 function NotePackageUpdateMsg ($version, $verfile, $message) {
-    $version | Out-File "${datapath}/${verfile}" -NoNewline
+    if ("$env:debug" -ne "true") {
+        $version | Out-File "${datapath}/${verfile}" -NoNewline
+    }
     SendPushover "Package Updated" "$message"
     Write-Host "Updated to `"$version`""
 }
 
 function NotePackageUpdate ($version, $verfile, $name, $size) {
-    $version | Out-File "${datapath}/${verfile}" -NoNewline
+    if ("$env:debug" -ne "true") {
+        $version | Out-File "${datapath}/${verfile}" -NoNewline
+    }
     if ($null -eq $size) {
         Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
         SendPushover "Package Updated" "$name updated to $version [$size]"
@@ -194,7 +205,7 @@ function SendPushover($title, $message) {
 }
 
 function ProcessChangelog ($data) {
-    $data = $data -Replace "(?ms)<a.*?>(.*?)</a>",'$1'  #Remove any link tags and replace with the links inner text
+    $data = $data -Replace '(?ms)<a.*?>(.*?)</a>','$1'  #Remove any link tags and replace with the links inner text
     $data = $data -Replace "</li>","" #Remove closing li tag
     $data = $data -Replace "<li>","*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
@@ -213,5 +224,8 @@ function ProcessChangelog ($data) {
     $data = $data -creplace '(?m)^\*\S+','*' #Make sure any lines starting with * has one whitespace character after
     $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
     $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
-    $data
+    if ("$env:debug" -eq "true") {
+        Write-Host "Changelog Process:`n$data`n----------"
+    }
+    return $data
 }
