@@ -8,7 +8,7 @@
     <title>RPCS3</title>
     <authors>Nekotekina, kd-11, Contributors</authors>
     <projectUrl>https://rpcs3.net/</projectUrl>
-    <iconUrl>https://rpcs3.net/img/icons/menu/logo.png</iconUrl>
+    <iconUrl>https://data.cossey.nz/packages/icons/rpcs3.png</iconUrl>
     <copyright>GNU GPLv2 License</copyright>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/RPCS3/rpcs3/</projectSourceUrl>
