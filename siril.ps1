@@ -41,6 +41,8 @@ $changelog
 
 $windows64download = [regex]::match($releasepagedata.Content, "class=`"mw-headline`".*?Windows \(64bit\)</span>.*?<ul>.*?</ul>.*?<ul>.*?<a.*? href=`"(.*?)`".*?</a>.*?</ul>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
+if (DownloadNotValid $windows64download $templatename) {return}
+
 BuildTemplate $tempfolder $templatename "" "" $version $description
 
 if (!(ExtractZipFromURL $windows64download $tempfolder)) {return}

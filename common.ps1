@@ -196,6 +196,15 @@ function VersionNotValid($version, $packagename) {
     return $true
 }
 
+function DownloadNotValid($url, $packagename) {
+    if ($url -eq "") {
+        Write-Host "URL is invalid"
+        PackageError "Package: $packagename`nURL Empty"
+        return $true
+    }
+    return $false
+}
+
 function SendPushover($title, $message) {
     if ((-not (Test-Path Env:AKEY)) -or (-not (Test-Path Env:UKEY))) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
@@ -221,6 +230,11 @@ function ProcessChangelog ($data) {
     $data = $data -replace "</div>", "" #Remove div tag
     $data = $data -creplace '(?m)^\s*\r?\n','' #Remove any * on lines of their own
     
+    $data = $data -Replace "<h1>","# "
+    $data = $data -Replace "<h2>","## "
+    $data = $data -Replace "</h1>",""
+    $data = $data -Replace "</h2>",""
+
     $data = $data -creplace '(?m)^\*\S+','*' #Make sure any lines starting with * has one whitespace character after
     $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
     $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them

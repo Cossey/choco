@@ -22,6 +22,10 @@ $freeurl = [regex]::match($currentversion.Content, "blockquote class=`"well`".*?
 $prourl = [regex]::match($currentversion.Content, "BurnAware Professional.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 $premiumurl = [regex]::match($currentversion.Content, "BurnAware Premium.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
+if (DownloadNotValid $freeurl "Burnaware Free") {return}
+if (DownloadNotValid $prourl "Burnaware Pro") {return}
+if (DownloadNotValid $premiumurl "Burnaware Premium") {return}
+
 if ($freeurl.StartsWith("/")) { $freeurl = "https://www.burnaware.com" + $freeurl }
 if ($prourl.StartsWith("/")) { $prourl = "https://www.burnaware.com" + $prourl }
 if ($premiumurl.StartsWith("/")) { $premiumurl = "https://www.burnaware.com" + $premiumurl }

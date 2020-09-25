@@ -19,6 +19,9 @@ if (VersionNotNew $oldversion $version) {return}
 $baseurl = [regex]::match($downloadpagehtml, "<base href=`"(.*?)`">").Groups[1].Value
 
 $downloadurlraw = [regex]::match($downloaddatahtml, "<button name=`"download`".*?value=`"(.*?)`"").Groups[1].Value
+
+if (DownloadNotValid $downloadurlraw $templatename) {return}
+
 $changelog = [regex]::match($downloaddatahtml, "Changelog:</span></div>(.*?)<div class=`"Dropdown`">").Groups[1].Value
 
 $changelog = ProcessChangelog $changelog
