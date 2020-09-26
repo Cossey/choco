@@ -55,7 +55,7 @@ if (DownloadNotValid $windowsdownload $templatename) {return}
 
 $file = "install_$version.exe"
 
-$filename = (Join-Path $tempfolder "tools" $file)
+$filename = "${tempfolder}/tools/${file}"
 
 $result = (DownloadFile $windowsdownload $filename)
 
@@ -64,7 +64,6 @@ $size = $result[1]
 
 BuildTemplate $tempfolder $templatename $hash $file $version $description
 
-#Ignore Push errors for this - siril seems to cause HTTP524, probably due to cloudflare or chocolatey.org website.
 if (!(PackAndClean $tempfolder)) {return}
 
 NotePackageUpdate $version $verfile $templatename (GetFileSize $size)
