@@ -1,3 +1,12 @@
-$ErrorActionPreference = 'Stop'
+$uninstaller = ((Get-UninstallRegistryKey -SoftwareName 'Siril*').UninstallString -split '"')[1]
 
-Remove-Item "$([Environment]::GetFolderPath('CommonStartMenu'))\Programs\SIRIL.lnk"
+
+$packageArgs = @{
+    packageName   = $env:ChocolateyPackageName
+    silentArgs    = '/VERYSILENT /SUPPRESSMSGBOXES'
+    validExitCodes= @(0)
+    file          = $uninstaller
+    fileType      = 'exe'
+}
+
+Uninstall-ChocolateyPackage @packageArgs

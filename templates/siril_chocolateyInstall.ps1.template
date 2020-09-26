@@ -1,0 +1,13 @@
+$toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+$file       =  Join-Path $toolsDir "%downloadurl%"
+
+$packageArgs = @{
+  packageName   = $env:ChocolateyPackageName
+  fileType      = 'EXE' 
+  file           = $file
+  softwareName  = 'SiriL*'
+  silentArgs   = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+  validExitCodes= @(0)
+}
+
+Install-ChocolateyInstallPackage @packageArgs

@@ -1,7 +1,7 @@
 PackageName "Burnaware"
 
 #Common Script Vars
-$tempfolder = "$temp/ba/"
+$tempfolder = Join-Path $temp "ba"
 $verfile = "burnaware.ver"
 $oldversion = GetLastVersion $verfile
 

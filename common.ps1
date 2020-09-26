@@ -34,15 +34,29 @@ function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description)
     }
 }
 
-function HashAndSizeFromFileURL ($url) {
+function DownloadFile($url, $out) {
+    Write-Host "Downloading File to `"$out`"..."
+    
+    Invoke-WebRequest -Uri $url -outfile $out
+
+    $hash = (Get-FileHash $out).Hash
+    $file = (Get-Item $out).Length
+
+    Write-Host "File Size `"$file`" Hash `"$hash`"" -ForegroundColor Green
+    
+    return @($hash, $file)
+}
+
+function HashAndSizeFromFileURL ($url) {         
     $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
 
     New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
     $out = "${temp}/${randomstring}"
+
     Write-Host "Downloading File to `"$out`"..."
     Invoke-WebRequest -Uri $url -outfile $out
     $hash = (Get-FileHash $out).Hash
-    $file = (Get-Item $out).length
+    $file = (Get-Item $out).Length
     Write-Host "File Size `"$file`" Hash `"$hash`"" -ForegroundColor Green
     Remove-Item -path $out
     Write-Host "Removed temporary file `"$out`""
