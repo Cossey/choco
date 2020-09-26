@@ -55,14 +55,14 @@ if (DownloadNotValid $windowsdownload $templatename) {return}
 
 $file = "install_$version.exe"
 
+BuildTemplate $tempfolder $templatename $hash $file $version $description
+
 $filename = "${tempfolder}/tools/${file}"
 
 $result = (DownloadFile $windowsdownload $filename)
 
 $hash = $result[0]
 $size = $result[1]
-
-BuildTemplate $tempfolder $templatename $hash $file $version $description
 
 if (!(PackAndClean $tempfolder)) {return}
 
