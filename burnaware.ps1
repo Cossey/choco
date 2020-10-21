@@ -17,10 +17,20 @@ if (VersionNotValid $version "burnaware") {return}
 
 if (VersionNotNew $oldversion $version) {return}
 
+$links = $currentversion.Links
+
 Write-Host Build Download URLs...
-$freeurl = [regex]::match($currentversion.Content, "blockquote class=`"well`".*?href=`".*?`".*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
-$prourl = [regex]::match($currentversion.Content, "BurnAware Professional.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
-$premiumurl = [regex]::match($currentversion.Content, "BurnAware Premium.*?href=`"(.*?)`"", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+for ($i=0; $i -lt $links.Count; $i++) {
+    if ($links[$i].href -like "*cfree*") {
+        $freeurl = $links[$i].href
+    }
+    if ($links[$i].href -like "*pro*") {
+        $prourl = $links[$i].href
+    }
+    if ($links[$i].href -like "*premium*") {
+        $premiumurl = $links[$i].href
+    }
+}
 
 if (DownloadNotValid $freeurl "Burnaware Free") {return}
 if (DownloadNotValid $prourl "Burnaware Pro") {return}
@@ -33,8 +43,8 @@ if ($premiumurl.StartsWith("/")) { $premiumurl = "https://www.burnaware.com" + $
 #Get Changelog
 $whatsnew = Invoke-WebRequest -Uri $whatsnewurl 
 
-$releasedate = [regex]::match($whatsnew.Content, "Released (.*)<br />").Groups[1].Value
-$changelog = [regex]::match($whatsnew.Content, "Version history.*?<div.*?>(.*?)</div>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$releasedate = [regex]::match($whatsnew.Content, "Released (.*)</small>").Groups[1].Value
+$changelog = [regex]::match($whatsnew.Content, "Released.*?<div.*?>(.*?)</div>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 $changelog = ProcessChangelog $changelog
 
 $description = @"
