@@ -11,7 +11,7 @@ $currentversionurl = "www.burnaware.com/download.html"
 $whatsnewurl = "www.burnaware.com/whats-new.html"
 
 $currentversion = Invoke-WebRequest -Uri $currentversionurl
-$version = [regex]::match($currentversion.Content, "BurnAware Free.*Version (.*?)<br />", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$version = [regex]::match($currentversion.Content, "<small.*?>version (.*?)</small>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
 if (VersionNotValid $version "burnaware") {return}
 
