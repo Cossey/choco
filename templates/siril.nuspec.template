@@ -6,7 +6,7 @@
     <owners>Stewart Cossey</owners>
     <packageSourceUrl>https://github.com/Cossey/choco</packageSourceUrl>
     <title>SIRIL</title>
-    <authors>Vincent Hourdin, Cyril Richard, François Meyer and Contributors</authors>
+    <authors>Vincent Hourdin, Cyril Richard, François Meyer, Contributors</authors>
     <projectUrl>https://www.siril.org/</projectUrl>
     <projectSourceUrl>https://gitlab.com/free-astro/siril</projectSourceUrl>
     <bugTrackerUrl>https://gitlab.com/free-astro/siril/-/issues</bugTrackerUrl>
