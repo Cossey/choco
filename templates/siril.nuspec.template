@@ -12,7 +12,7 @@
     <bugTrackerUrl>https://gitlab.com/free-astro/siril/-/issues</bugTrackerUrl>
     <copyright>2012-2020 Team free-astro</copyright>
     <licenseUrl>https://gitlab.com/free-astro/siril/-/blob/master/LICENSE.md</licenseUrl>
-	  <iconUrl>https://data.cossey.nz/packages/icons/siril.png</iconUrl>
+	  <iconUrl>https://siril.org/free_astro.siril.svg</iconUrl>
     <docsUrl>https://free-astro.org/siril_doc-en/</docsUrl>
     <tags>siril astronomical image processing</tags>
     <summary>Free astronomical image processing software</summary>
