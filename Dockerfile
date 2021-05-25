@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN pwsh -Command "Install-Module -Name PowerShellPushOver -Force"
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "ps -e | grep pwsh" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD ps -e | grep pwsh
 
 COPY *.ps1 /ps/
 COPY templates/ /ps/templates/
