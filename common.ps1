@@ -142,6 +142,22 @@ function JoinPath ($path) {
     $joinedpathstring 
 }
 
+function ItemEmpty ($obj, $packagename, $objname) {
+    if ($obj -eq "") {
+        PackageError "Package: $packagename`nEmpty Var: $objname"
+        return $true
+    } 
+    return $false
+}
+
+function ItemNotDefined ($obj, $packagename, $objname) {
+    if ($null -eq $obj) {
+        PackageError "Package: $packagename`nNull Var: $objname"
+        return $true
+    } 
+    return $false
+}
+
 function PackageName ($title) {
     Write-Host "[PACKAGE $title UPDATER]" -ForegroundColor Yellow
 }
@@ -190,6 +206,7 @@ function NotePackageUpdate ($version, $verfile, $name, $size) {
 }
 
 function PackageError($message) {
+    Write-Host "ERROR: $message"
     SendPushover "Package Error" "$message"
 }
 

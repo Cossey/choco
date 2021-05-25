@@ -8,25 +8,32 @@ $oldversion = GetLastVersion $verfile
 
 if (CheckSkip $oldversion) {return}
 
-$downloadpagehtml = (Invoke-WebRequest "https://en.roccat.org/Support/Product/ROCCAT-Swarm").Content
-$downloaddatahtml = [regex]::match($downloadpagehtml, "<div id=`"Downloads`">(.*?)<span>Previous versions:</span>")
-$version = [regex]::match($downloaddatahtml, "class=`"Version`".*?<span>V:(.*?)</span>").Groups[1].Value
+$downloadapi = (Invoke-WebRequest "https://api.roccat-neon.com/device/Support/Downloads/en/202/v2").Content
+$apijson = ConvertFrom-Json $downloadapi
+
+$item = $apijson.download;
+
+if (ItemNotDefined $item $templatename "item") {return}
+
+$version = $item.version
+$release = "Released $($item.release)"
 
 if (VersionNotValid $version $templatename) {return}
 
 if (VersionNotNew $oldversion $version) {return}
 
-$baseurl = [regex]::match($downloadpagehtml, "<base href=`"(.*?)`">").Groups[1].Value
+$changelogjson = $item.changelog.'ROCCAT® Swarm'[0].changelog;
 
-$downloadurlraw = [regex]::match($downloaddatahtml, "<button name=`"download`".*?value=`"(.*?)`"").Groups[1].Value
+foreach ($log in $changelogjson) {
+    $changelogdata = "$changelogdata`n* $log"
+}
 
-if (DownloadNotValid $downloadurlraw $templatename) {return}
+$changelog = @"
+$release
+$changelogdata
+"@
 
-$changelog = [regex]::match($downloaddatahtml, "Changelog:</span></div>(.*?)<div class=`"Dropdown`">").Groups[1].Value
-
-$changelog = ProcessChangelog $changelog
-
-$downloadurl = JoinPath(@($baseurl, $downloadurlraw))
+$downloadurl = $item.url
 
 $fileinfo = HashAndSizeFromFileURL $downloadurl
 $filehash = $fileinfo[0]

@@ -11,7 +11,7 @@ $currentversionurl = "www.burnaware.com/download.html"
 $whatsnewurl = "www.burnaware.com/whats-new.html"
 
 $currentversion = Invoke-WebRequest -Uri $currentversionurl
-$version = [regex]::match($currentversion.Content, "<small.*?>version (.*?)</small>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$version = [regex]::match($currentversion.Content, "[Vv]ersion ([0-9]+\.[0-9]*)", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
 if (VersionNotValid $version "burnaware") {return}
 
@@ -44,11 +44,17 @@ if ($premiumurl.StartsWith("/")) { $premiumurl = "https://www.burnaware.com" + $
 $whatsnew = Invoke-WebRequest -Uri $whatsnewurl 
 
 $releasedate = [regex]::match($whatsnew.Content, "Released (.*)</small>").Groups[1].Value
-$changelog = [regex]::match($whatsnew.Content, "Released.*?<div.*?>(.*?)</div>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$changelog = [regex]::match($whatsnew.Content, "Released.*?<p.*?>(.*?)</p>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+
+if (ItemEmpty $changelog "Burnaware" "changelog") {return}
+
 $changelog = ProcessChangelog $changelog
+
+
 
 $description = @"
 Released $releasedate
+
 $changelog
 "@
 
