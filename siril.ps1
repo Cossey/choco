@@ -58,7 +58,7 @@ $result = HashAndSizeFromFileURL $windowsdownload
 $hash = $result[0]
 $size = $result[1]
 
-BuildTemplate $tempfolder $templatename $hash $windowsdownload $version $description
+if (!(BuildTemplate $tempfolder $templatename $hash $windowsdownload $version $description)) {return}
 
 if (!(PackAndClean $tempfolder)) {return}
 

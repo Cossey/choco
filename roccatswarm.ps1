@@ -39,7 +39,7 @@ $fileinfo = HashAndSizeFromFileURL $downloadurl
 $filehash = $fileinfo[0]
 $filesize = $fileinfo[1]
 
-BuildTemplate $tempfolder $templatename $filehash $downloadurl $version $changelog
+if (!(BuildTemplate $tempfolder $templatename $filehash $downloadurl $version $changelog)) {return}
 if (!(PackAndClean $tempfolder)) {return}
 
 NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)

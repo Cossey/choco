@@ -40,6 +40,6 @@ if ($shafile) {
     $sha256 = $sha256.Trim()
 }
 
-BuildTemplate $tempfolder $templatename $sha256 $dlfile $nugetversion ""
+if (!(BuildTemplate $tempfolder $templatename $sha256 $dlfile $nugetversion "")) {return}
 if (!(PackAndClean $tempfolder)) {return}
 NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)
