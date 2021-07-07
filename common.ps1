@@ -1,6 +1,23 @@
 #common functions for scripts
 
 function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description) {
+    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description)
+} 
+
+function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $version, $description) {
+
+    Write-Host "Validating variables..."
+    if ($null -eq $hash) {
+        PackageError "$name has empty hash"
+        return $false
+    }
+
+    if ($null -eq $url) {
+        PackageError "$name has empty url"
+        return $false
+    }
+
+
     Write-Host "Building `"$name`" templates..."
     New-Item -ItemType Directory -Path "${tempfolder}/tools" -ErrorAction Ignore | Out-Null
 
@@ -10,6 +27,12 @@ function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description)
     $nstemplate = $nstemplate -replace "%description%", "$description"
     $nstemplate = $nstemplate -replace "%hash%", "$hash"
     $nstemplate = $nstemplate -replace "%downloadurl%", "$url"
+
+    if ($hash64 -and $url64) {
+        $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
+        $nstemplate = $nstemplate -replace "%downloadurl64%", "$url64"
+    }
+
     $nstemplate | Out-File "$tempfolder/${name}.nuspec"
 
     $files = Get-ChildItem -Path $templates -Filter "${name}_*"
@@ -24,6 +47,10 @@ function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description)
             $templater = $templater -replace "%hash%", "$hash"
             $templater = $templater -replace "%downloadurl%", "$url"
 
+            if ($hash64 -and $url64) {
+                $templater = $templater -replace "%hash64%", "$hash64"
+                $templater = $templater -replace "%downloadurl64%", "$url64"
+            }
             
             $templater | Out-File "${tempfolder}/tools/${outfilename}"
         } else {
@@ -32,6 +59,8 @@ function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description)
             Copy-Item "${templates}/$($file.Name)" "${tempfolder}/tools/$newfilename"
         }
     }
+
+    return $true
 }
 
 function DownloadFile($url, $out) {
@@ -228,7 +257,7 @@ function VersionNotValid($version, $packagename) {
 }
 
 function DownloadNotValid($url, $packagename) {
-    if ($url -eq "") {
+    if ($null -eq $url) {
         Write-Host "URL is invalid"
         PackageError "Package: $packagename`nURL Empty"
         return $true
