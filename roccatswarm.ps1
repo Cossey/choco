@@ -35,11 +35,15 @@ $changelogdata
 
 $downloadurl = $item.url
 
-$fileinfo = HashAndSizeFromFileURL $downloadurl
+$fileinfo = HashSizeAndContentsFromZipFileURL $downloadurl
 $filehash = $fileinfo[0]
 $filesize = $fileinfo[1]
+$files = $fileinfo[2]
 
-if (!(BuildTemplate $tempfolder $templatename $filehash $downloadurl $version $changelog)) {return}
+$exes = $files | Where-Object { $_.FullName -like '*.exe' }
+$installfile = $exes[0].FullName
+
+if (!(BuildTemplateParam $tempfolder $templatename $filehash $downloadurl $version $changelog $installfile "")) {return}
 if (!(PackAndClean $tempfolder)) {return}
 
 NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)

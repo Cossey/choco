@@ -11,3 +11,5 @@ Uninstall-ChocolateyPackage `
     -FileType 'EXE' `
     -SilentArgs "-runfromtemp -l0x0409 -removeonly -s -f1`"$response`"" `
     -File $uninstaller
+
+Remove-Item -Path "${env:TEMP}/roccatswarm" -Recurse

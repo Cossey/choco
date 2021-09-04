@@ -12,9 +12,6 @@ $packageArgs = @{
 
 Install-ChocolateyZipPackage @packageArgs
 
-$extractedFileExes = Get-ChildItem -Path "${env:TEMP}/roccatswarm" -Filter "*.exe"
-$installExe = $extractedFileExes[0].Name
-
 $response = Join-Path $toolsDir 'install.iss'
 
 # This an InstallShield installer, requiring a response file (.ISS) for silent
@@ -23,10 +20,8 @@ $response = Join-Path $toolsDir 'install.iss'
 $installArgs = @{
   packageName  = $env:ChocolateyPackageName
   fileType     = 'exe'
-  file          = "${env:TEMP}/roccatswarm/$installExe"
+  file          = "${env:TEMP}/roccatswarm/%param1%"
   silentArgs   = "/s /f1`"$response`""
 }
 
 Install-ChocolateyInstallPackage @installArgs
-
-Remove-Item -Path "${env:TEMP}/roccatswarm" -Recurse
