@@ -84,7 +84,7 @@ $prosize = $result[1]
 $result = HashAndSizeFromFileURL $prourl64
 $prohash64 = $result[0]
 $prosize64 = $result[1]
-if (BuildTemplate64 $tempfolder "burnawarepro" $prohash $prourl $prohash64 $prourl64 $version $description) {
+if (BuildTemplate64 $tempfolder "burnawarepro" $prohash $prourl $prohash64 $prourl64 $version $description "" "") {
     if (!(PackAndClean $tempfolder)) {return}
 }
 
@@ -95,7 +95,7 @@ $presize = $result[1]
 $result = HashAndSizeFromFileURL $premiumurl64
 $prehash64 = $result[0]
 $presize64 = $result[1]
-if (BuildTemplate64 $tempfolder "burnawarepremium" $prehash $premiumurl $prehash64 $premiumurl64 $version $description) {
+if (BuildTemplate64 $tempfolder "burnawarepremium" $prehash $premiumurl $prehash64 $premiumurl64 $version $description "" "") {
     if (!(PackAndClean $tempfolder)) {return}
 }
 

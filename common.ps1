@@ -1,10 +1,14 @@
 #common functions for scripts
 
 function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description) {
-    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description)
-} 
+    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description "" "")
+}
 
-function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $version, $description) {
+function BuildTemplateParam ($tempfolder, $name, $hash, $url, $version, $description, $param1, $param2) {
+    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description $param1 $param2)
+}
+
+function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $version, $description, $param1, $param2) {
 
     Write-Host "Validating variables..."
     if ($null -eq $hash) {
@@ -27,6 +31,8 @@ function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $ver
     $nstemplate = $nstemplate -replace "%description%", "$description"
     $nstemplate = $nstemplate -replace "%hash%", "$hash"
     $nstemplate = $nstemplate -replace "%downloadurl%", "$url"
+    $nstemplate = $nstemplate -replace "%param1%", "$param1"
+    $nstemplate = $nstemplate -replace "%param2%", "$param2"
 
     if ($hash64 -and $url64) {
         $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
@@ -46,6 +52,8 @@ function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $ver
             $templater = $templater -replace "%description%", "$description"
             $templater = $templater -replace "%hash%", "$hash"
             $templater = $templater -replace "%downloadurl%", "$url"
+            $templater = $templater -replace "%param1%", "$param1"
+            $templater = $templater -replace "%param2%", "$param2"
 
             if ($hash64 -and $url64) {
                 $templater = $templater -replace "%hash64%", "$hash64"
@@ -54,7 +62,7 @@ function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $ver
             
             $templater | Out-File "${tempfolder}/tools/${outfilename}"
         } else {
-            $newfilename = $file.Name  -replace ".*_"
+            $newfilename = $file.Name -replace ".*_"
             Write-Host "Copying file '$newfilename'"
             Copy-Item "${templates}/$($file.Name)" "${tempfolder}/tools/$newfilename"
         }
@@ -76,6 +84,25 @@ function DownloadFile($url, $out) {
     return @($hash, $file)
 }
 
+function HashSizeAndContentsFromZipFileURL ($url) {
+    $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
+    $out = "${temp}/${randomstring}"
+
+    Write-Host "Downloading Zip File to `"$out`"..."
+    Invoke-WebRequest -Uri $url -outfile $out
+    $hash = (Get-FileHash $out).Hash
+    $filesize = (Get-Item $out).Length
+    
+    $zip = [IO.Compression.ZipFile]::OpenRead($out)
+    $filelist = $zip.Entries
+    $zip.Dispose()
+    Write-Host "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)" -ForegroundColor Green
+    Remove-Item -path $out
+    Write-Host "Removed temporary file `"$out`""
+    return @($hash, $filesize, $filelist)
+}
+
 function HashAndSizeFromFileURL ($url) {         
     $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
 
@@ -85,11 +112,11 @@ function HashAndSizeFromFileURL ($url) {
     Write-Host "Downloading File to `"$out`"..."
     Invoke-WebRequest -Uri $url -outfile $out
     $hash = (Get-FileHash $out).Hash
-    $file = (Get-Item $out).Length
-    Write-Host "File Size `"$file`" Hash `"$hash`"" -ForegroundColor Green
+    $filesize = (Get-Item $out).Length
+    Write-Host "File Size `"$filesize`" Hash `"$hash`"" -ForegroundColor Green
     Remove-Item -path $out
     Write-Host "Removed temporary file `"$out`""
-    return @($hash, $file)
+    return @($hash, $filesize)
 }
 
 function ExtractZipFromURL ($url, $tempfolder) {
