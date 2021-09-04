@@ -98,8 +98,10 @@ function HashSizeAndContentsFromZipFileURL ($url) {
     $filelist = $zip.Entries
     $zip.Dispose()
     Write-Host "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)" -ForegroundColor Green
-    Remove-Item -path $out
-    Write-Host "Removed temporary file `"$out`""
+    if ("$env:debug" -ne "true") {
+        Remove-Item -path $out
+        Write-Host "Removed temporary file `"$out`""
+    }
     return @($hash, $filesize, $filelist)
 }
 
@@ -114,8 +116,10 @@ function HashAndSizeFromFileURL ($url) {
     $hash = (Get-FileHash $out).Hash
     $filesize = (Get-Item $out).Length
     Write-Host "File Size `"$filesize`" Hash `"$hash`"" -ForegroundColor Green
-    Remove-Item -path $out
-    Write-Host "Removed temporary file `"$out`""
+    if ("$env:debug" -ne "true") {
+        Remove-Item -path $out
+        Write-Host "Removed temporary file `"$out`""
+    }
     return @($hash, $filesize)
 }
 
