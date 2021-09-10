@@ -7,12 +7,12 @@ function LoadEnvVars () {
     LoadEnvVar "AKEY"
     LoadEnvVar "UKEY"
 
-    if ($DEBUG -and $DEBUG -ne "false" -and $DEBUG -ne "true") {
+    if ($DEBUG -ne "false" -and $DEBUG -ne "true") {
         Write-Host "DEBUG must be true or false"
         exit -2
     }
 
-    if ($DELAY -and $DELAY -notmatch "[0-9]*") {
+    if ($DELAY -and $DELAY -notmatch "[0-9]+") {
         Write-Host "DELAY must be a number"
         exit -2
     }
@@ -46,14 +46,17 @@ function LoadEnvVar ($var, $default) {
         Write-Host "Variable $var and ${var}_FILE are both defined!"
         exit -1
     }
-    
+
+    #echo "EV $var $val $val_file"
+
     if (-not $val -and -not $val_file) {
-        Set-Variable -Name $var -Value $default -Scope script
+        Set-Variable -Name $var -Value $default -Scope global
     } else {
         if ($val_file) {
-            Set-Variable -Name $var -Value (Get-Content -Path $val_file -Raw -ErrorAction Ignore) -Scope script
+            $filedata = (Get-Content $val_file -Raw -ErrorAction Ignore)
+            Set-Variable -Name $var -Value $filedata -Scope global
         } else {
-            Set-Variable -Name $var -Value $val -Scope script
+            Set-Variable -Name $var -Value $val -Scope global
         }
     }
 }
@@ -358,7 +361,7 @@ function DownloadNotValid($url, $packagename) {
 }
 
 function SendPushover($title, $message) {
-    if ((-not (Test-Path Env:AKEY)) -or (-not (Test-Path Env:UKEY))) {
+    if (-not $AKEY -or -not $UKEY) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
     }
     else {

@@ -75,23 +75,23 @@ $changelog
 Write-Host Release Date $releasedate
 
 #Process Versions
-# Write-Host "Burnaware Free" -ForegroundColor Yellow
-# $freefilename = "burnaware_cfree_${version}.exe"
-# $freesize = DownloadInstallerFile $freeurl $freefilename
+Write-Host "Burnaware Free" -ForegroundColor Yellow
+$freefilename = "burnaware_cfree_${version}.exe"
+$freesize = DownloadInstallerFile $freeurl $freefilename
 
-# if (BuildTemplate "burnawarefree" "" $freefilename $version $description) {
-#     if (!(PackAndClean)) {return}
-# }
+if (BuildTemplate "burnawarefree" "" $freefilename $version $description) {
+    if (!(PackAndClean)) {return}
+}
 
-# Write-Host "Burnaware Pro" -ForegroundColor Yellow
-# $profilename = "burnaware_pro_${version}.exe"
-# $profilename64 = "burnaware_pro_${version}_x64.exe"
-# $prosize = DownloadInstallerFile $prourl $profilename
-# $prosize64 = DownloadInstallerFile $prourl64 $profilename64
+Write-Host "Burnaware Pro" -ForegroundColor Yellow
+$profilename = "burnaware_pro_${version}.exe"
+$profilename64 = "burnaware_pro_${version}_x64.exe"
+$prosize = DownloadInstallerFile $prourl $profilename
+$prosize64 = DownloadInstallerFile $prourl64 $profilename64
 
-# if (BuildTemplate64 "burnawarepro" "" $profilename "" $profilename64 $version $description "" "") {
-#     if (!(PackAndClean)) {return}
-# }
+if (BuildTemplate64 "burnawarepro" "" $profilename "" $profilename64 $version $description "" "") {
+    if (!(PackAndClean)) {return}
+}
 
 Write-Host "Burnaware Premium" -ForegroundColor Yellow
 $premiumfilename = "burnaware_premium_${version}.exe"
@@ -103,16 +103,4 @@ if (BuildTemplate64 "burnawarepremium" "" $premiumfilename "" $premiumfilename64
     if (!(PackAndClean)) {return}
 }
 
-
-# Write-Host "Burnaware Premium" -ForegroundColor Yellow
-# $result = HashAndSizeFromFileURL $premiumurl
-# $prehash = $result[0]
-# $presize = $result[1]
-# $result = HashAndSizeFromFileURL $premiumurl64
-# $prehash64 = $result[0]
-# $presize64 = $result[1]
-# if (BuildTemplate64 $tempfolder "burnawarepremium" $prehash $premiumurl $prehash64 $premiumurl64 $version $description "" "") {
-#     if (!(PackAndClean $tempfolder)) {return}
-# }
-
-# NotePackageUpdateMsg $version $verfile "Burnaware Packages updated to $version`r`nFree: $(GetFileSize $freesize)`r`nPro: $(GetFileSize $prosize), $(GetFileSize $prosize64)`r`nPre: $(GetFileSize $presize), $(GetFileSize $presize64)"
+NotePackageUpdateMsg $version $verfile "Burnaware Packages updated to $version`r`nFree: $(GetFileSize $freesize)`r`nPro: $(GetFileSize $prosize), $(GetFileSize $prosize64)`r`nPre: $(GetFileSize $premiumsize), $(GetFileSize $premiumsize64)"

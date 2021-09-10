@@ -8,7 +8,7 @@ $progressPreference = 'silentlyContinue'
 
 LoadEnvVars
 
-if ($debug) {
+if ("$debug" -eq "true") {
     Write-Host "Debugging is enabled" -ForegroundColor "Red"
 }
 
@@ -22,6 +22,6 @@ while ($true) {
 
     Write-Host "-----------------------------"
     
-    if (-not $DELAY) {break}
+    if (-not $DELAY -or $DELAY -eq 0) {break}
     Start-Sleep -Seconds ([int]$DELAY * 60)
 }
