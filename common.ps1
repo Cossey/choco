@@ -1,14 +1,72 @@
 #common functions for scripts
 
-function BuildTemplate ($tempfolder, $name, $hash, $url, $version, $description) {
-    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description "" "")
+function LoadEnvVars () {
+    LoadEnvVar "DELAY"
+    LoadEnvVar "DEBUG" "false"
+    LoadEnvVar "CKEY"
+    LoadEnvVar "AKEY"
+    LoadEnvVar "UKEY"
+
+    if ($DEBUG -and $DEBUG -ne "false" -and $DEBUG -ne "true") {
+        Write-Host "DEBUG must be true or false"
+        exit -2
+    }
+
+    if ($DELAY -and $DELAY -notmatch "[0-9]*") {
+        Write-Host "DELAY must be a number"
+        exit -2
+    }
+
+    if ($CKEY -and $CKEY -notmatch "(?im)^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$") {
+        Write-Host "CKEY must be a valid API key"
+        exit -2
+    }
+
+    if ($AKEY -and $AKEY.length -ne 30) {
+        Write-Host "AKEY must be a valid API key"
+        exit -2
+    }
+
+    if ($UKEY -and $UKEY.length -ne 30) {
+        Write-Host "UKEY must be a valid API key"
+        exit -2
+    }
+
 }
 
-function BuildTemplateParam ($tempfolder, $name, $hash, $url, $version, $description, $param1, $param2) {
-    return (BuildTemplate64 $tempfolder $name $hash $url $null $null $version $description $param1 $param2)
+function LoadEnvVar ($var, $default) {
+    try {
+        $val = (Get-Item env:"$var" -ErrorAction Ignore).Value
+    } catch {}
+    try {
+        $val_file = (Get-Item env:"${var}_FILE" -ErrorAction Ignore).Value
+    } catch {}
+
+    if ($val -and $val_file) {
+        Write-Host "Variable $var and ${var}_FILE are both defined!"
+        exit -1
+    }
+    
+    if (-not $val -and -not $val_file) {
+        Set-Variable -Name $var -Value $default -Scope script
+    } else {
+        if ($val_file) {
+            Set-Variable -Name $var -Value (Get-Content -Path $val_file -Raw -ErrorAction Ignore) -Scope script
+        } else {
+            Set-Variable -Name $var -Value $val -Scope script
+        }
+    }
 }
 
-function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $version, $description, $param1, $param2) {
+function BuildTemplate ($name, $hash, $url, $version, $description) {
+    return (BuildTemplate64 $name $hash $url $null $null $version $description "" "")
+}
+
+function BuildTemplateParam ($name, $hash, $url, $version, $description, $param1, $param2) {
+    return (BuildTemplate64 $name $hash $url $null $null $version $description $param1 $param2)
+}
+
+function BuildTemplate64 ($name, $hash, $url, $hash64, $url64, $version, $description, $param1, $param2) {
 
     Write-Host "Validating variables..."
     if ($null -eq $hash) {
@@ -23,30 +81,29 @@ function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $ver
 
 
     Write-Host "Building `"$name`" templates..."
-    New-Item -ItemType Directory -Path "${tempfolder}/tools" -ErrorAction Ignore | Out-Null
+    New-Item -ItemType Directory -Path $(Join-Path "${tempfolder}" "tools") -ErrorAction Ignore | Out-Null
 
     Write-Host "Building nuspec template..."
-    $nstemplate = Get-Content "${templates}/${name}.nuspec.template" -Raw
+    $nstemplate = Get-Content $(Join-Path "${templates}" "${name}.nuspec.template") -Raw
     $nstemplate = $nstemplate -replace "%fileversion%", "$version"
     $nstemplate = $nstemplate -replace "%description%", "$description"
     $nstemplate = $nstemplate -replace "%hash%", "$hash"
     $nstemplate = $nstemplate -replace "%downloadurl%", "$url"
     $nstemplate = $nstemplate -replace "%param1%", "$param1"
     $nstemplate = $nstemplate -replace "%param2%", "$param2"
+    $nstemplate = $nstemplate -replace "%toolsfilepath%", "$(Join-Path "tools" "**")"
 
-    if ($hash64 -and $url64) {
-        $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
-        $nstemplate = $nstemplate -replace "%downloadurl64%", "$url64"
-    }
+    $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
+    $nstemplate = $nstemplate -replace "%downloadurl64%", "$url64"
 
-    $nstemplate | Out-File "$tempfolder/${name}.nuspec"
+    $nstemplate | Out-File $(Join-Path "$tempfolder" "${name}.nuspec")
 
     $files = Get-ChildItem -Path $templates -Filter "${name}_*"
     foreach ($file in $files) {
         if ($file.Name.EndsWith(".template")) {
             $outfilename = ($file.Name -replace ".{9}$" -replace ".*_")
             Write-Host "Building template '$outfilename'"
-            $templater = Get-Content "${templates}/$($file.Name)" -Raw
+            $templater = Get-Content $(Join-Path "${templates}" "$($file.Name)") -Raw
 
             $templater = $templater -replace "%fileversion%", "$version"
             $templater = $templater -replace "%description%", "$description"
@@ -55,20 +112,35 @@ function BuildTemplate64 ($tempfolder, $name, $hash, $url, $hash64, $url64, $ver
             $templater = $templater -replace "%param1%", "$param1"
             $templater = $templater -replace "%param2%", "$param2"
 
-            if ($hash64 -and $url64) {
-                $templater = $templater -replace "%hash64%", "$hash64"
-                $templater = $templater -replace "%downloadurl64%", "$url64"
-            }
+            $templater = $templater -replace "%hash64%", "$hash64"
+            $templater = $templater -replace "%downloadurl64%", "$url64"
             
-            $templater | Out-File "${tempfolder}/tools/${outfilename}"
-        } else {
+            $templater | Out-File $(Join-Path "${tempfolder}" "tools" "${outfilename}")
+        }
+        else {
             $newfilename = $file.Name -replace ".*_"
             Write-Host "Copying file '$newfilename'"
-            Copy-Item "${templates}/$($file.Name)" "${tempfolder}/tools/$newfilename"
+            Copy-Item $(Join-Path "${templates}" "$($file.Name)") $(Join-Path "${tempfolder}" "tools" "$newfilename")
         }
     }
 
     return $true
+}
+
+function DownloadInstallerFile($url, $filename) {
+    $dlpath = Join-Path "${tempfolder}" "tools"
+    $fullpath = Join-Path $dlpath $filename
+    New-Item -ItemType Directory -Path $dlpath -ErrorAction Ignore | Out-Null
+
+    Write-Host "Downloading File to `"$fullpath`"..."
+    
+    Invoke-WebRequest -Uri $url -outfile $fullpath
+
+    $filesize = (Get-Item $fullpath).Length
+
+    Write-Host "File Size `"$filesize`"" -ForegroundColor Green
+    
+    return $filesize
 }
 
 function DownloadFile($url, $out) {
@@ -85,9 +157,9 @@ function DownloadFile($url, $out) {
 }
 
 function HashSizeAndContentsFromZipFileURL ($url) {
-    $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
     New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-    $out = "${temp}/${randomstring}"
+    $out = $(Join-Path "${temp}" "${randomstring}")
 
     Write-Host "Downloading Zip File to `"$out`"..."
     Invoke-WebRequest -Uri $url -outfile $out
@@ -98,7 +170,7 @@ function HashSizeAndContentsFromZipFileURL ($url) {
     $filelist = $zip.Entries
     $zip.Dispose()
     Write-Host "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)" -ForegroundColor Green
-    if ("$env:debug" -ne "true") {
+    if ("$debug" -ne "true") {
         Remove-Item -path $out
         Write-Host "Removed temporary file `"$out`""
     }
@@ -106,26 +178,26 @@ function HashSizeAndContentsFromZipFileURL ($url) {
 }
 
 function HashAndSizeFromFileURL ($url) {         
-    $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
 
     New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-    $out = "${temp}/${randomstring}"
+    $out = $(Join-Path "${temp}" "${randomstring}")
 
     Write-Host "Downloading File to `"$out`"..."
     Invoke-WebRequest -Uri $url -outfile $out
     $hash = (Get-FileHash $out).Hash
     $filesize = (Get-Item $out).Length
     Write-Host "File Size `"$filesize`" Hash `"$hash`"" -ForegroundColor Green
-    if ("$env:debug" -ne "true") {
+    if ("$debug" -ne "true") {
         Remove-Item -path $out
         Write-Host "Removed temporary file `"$out`""
     }
     return @($hash, $filesize)
 }
 
-function ExtractZipFromURL ($url, $tempfolder) {
-    $randomstring = (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
-    $out = "${temp}/${randomstring}"
+function ExtractZipFromURL ($url) {
+    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
+    $out = $(Join-Path "${temp}" "${randomstring}")
     try {
         New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
         Write-Host "Downloading File to `"$out`"..."
@@ -142,36 +214,38 @@ function ExtractZipFromURL ($url, $tempfolder) {
         Write-Host "Error Extracting Zip From `"$url`""
         PackageError "Package: $tempfolder`nError Extracting from URL: $url"
         return $false
-    } finally {
+    }
+    finally {
         Remove-Item -Path $out
     }
 }
 
-function PackAndClean ($tempfolder, $ignorepushresult) {
+function PackAndClean ($ignorepushresult) {
     Set-Location -Path "$tempfolder"
     Write-Host "Packing `"$tempfolder`"..."
     $result = (choco pack)
     if ($LASTEXITCODE -ne "0") {
-        if ("$env:debug" -ne "true") {
+        if ("$debug" -ne "true") {
             Write-Host "Pack return exit code $LASTEXITCODE`n-----------`n$result`n-----------"
             Remove-Item -Path "$tempfolder" -Recurse -Force
         }
         return $false
     }
-    if ("$env:debug" -ne "true") {
+    if ("$debug" -ne "true") {
         Write-Host "Pushing..."
-        $result = (choco push --api-key=$Env:CKEY)
+        $result = (choco push --api-key=$CKEY)
         if ($LASTEXITCODE -ne "0") {
             Write-Host "Exit code $LASTEXITCODE`n-----------`n$result`n----------`nRetrying..."
-            $result = (choco push --api-key=$Env:CKEY)
+            $result = (choco push --api-key=$CKEY)
             if ($LASTEXITCODE -ne "0") {
                 Write-Host "Could not push to chocolatey. Exit code $LASTEXITCODE`n----------`n$result`n----------"
 
                 if (($null -eq $ignorepushresult -or $ignorepushresult -ne "true")) {
                     Write-Host "Assume Package success due to override."
-                } else {
+                }
+                else {
                     
-                    if ("$env:debug" -ne "true") {
+                    if ("$debug" -ne "true") {
                         Write-Host "Cleaning..."
                         Remove-Item -Path "$tempfolder" -Recurse -Force
                     }
@@ -181,25 +255,11 @@ function PackAndClean ($tempfolder, $ignorepushresult) {
         }
     }
     Set-Location -Path $temp
-    if ("$env:debug" -ne "true") {
+    if ("$debug" -ne "true") {
         Write-Host "Cleaning..."
         Remove-Item -Path "$tempfolder" -Recurse -Force
     }
     return $true
-}
-
-function JoinPath ($path) {
-    $joinedpathstring += $path[0]
-    for ($i=1;$i -lt $path.length; $i++) {
-        if ("" -ne ("{0}" -f $path[$i]).Trim()) {
-            if (!$path[$i].StartsWith("/")) {
-                $joinedpathstring += "/" + $path[$i]
-            } else {
-                $joinedpathstring += $path[$i]
-            }
-        }
-    }
-    $joinedpathstring 
 }
 
 function ItemEmpty ($obj, $packagename, $objname) {
@@ -219,7 +279,7 @@ function ItemNotDefined ($obj, $packagename, $objname) {
 }
 
 function PackageName ($title) {
-    Write-Host "[PACKAGE $title UPDATER]" -ForegroundColor Yellow
+    Write-Host "[$title]" -ForegroundColor Yellow
 }
 
 function CheckSkip ($version) {
@@ -231,7 +291,7 @@ function CheckSkip ($version) {
 }
 
 function GetLastVersion ($verfile) {
-    Get-Content -Path "${datapath}/${verfile}" -Raw -ErrorAction Ignore
+    Get-Content -Path $(Join-Path "${datapath}" "${verfile}") -Raw -ErrorAction Ignore
 }
 
 function GetFileSize ($bytesize) {
@@ -245,21 +305,22 @@ function ConvertDashVersion ($version, $dashpostfix) {
 }
 
 function NotePackageUpdateMsg ($version, $verfile, $message) {
-    if ("$env:debug" -ne "true") {
-        $version | Out-File "${datapath}/${verfile}" -NoNewline
+    if ("$debug" -ne "true") {
+        $version | Out-File $(Join-Path "${datapath}" "${verfile}") -NoNewline
     }
     SendPushover "Package Updated" "$message"
     Write-Host "Updated to `"$version`""
 }
 
 function NotePackageUpdate ($version, $verfile, $name, $size) {
-    if ("$env:debug" -ne "true") {
-        $version | Out-File "${datapath}/${verfile}" -NoNewline
+    if ("$debug" -ne "true") {
+        $version | Out-File $(Join-Path "${datapath}" "${verfile}") -NoNewline
     }
     if ($null -eq $size) {
         Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
         SendPushover "Package Updated" "$name updated to $version [$size]"
-    } else {
+    }
+    else {
         Write-Host "`"$name`" updated to `"$version`""
         SendPushover "Package Updated" "$name updated to $version"
     }
@@ -299,15 +360,16 @@ function DownloadNotValid($url, $packagename) {
 function SendPushover($title, $message) {
     if ((-not (Test-Path Env:AKEY)) -or (-not (Test-Path Env:UKEY))) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
-    } else {
-        Send-Pushover -Token $Env:AKEY -User $Env:UKEY -MessageTitle $title -Message $message
+    }
+    else {
+        Send-Pushover -Token $AKEY -User $UKEY -MessageTitle $title -Message $message
     }
 }
 
 function ProcessChangelog ($data) {
-    $data = $data -Replace '(?ms)<a.*?>(.*?)</a>','$1'  #Remove any link tags and replace with the links inner text
-    $data = $data -Replace "</li>","" #Remove closing li tag
-    $data = $data -Replace "<li>","*" #Convert to *
+    $data = $data -Replace '(?ms)<a.*?href="(.*?)".*?>(.*?)</a>', '[$2]($1)'  #Create a markdown link
+    $data = $data -Replace "</li>", "" #Remove closing li tag
+    $data = $data -Replace "<li>", "*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
     $data = $data -replace "<b>-</b>", "*" #Convert to *
     $data = $data -replace "<br />", "" #Remove line break tag
@@ -319,17 +381,17 @@ function ProcessChangelog ($data) {
     $data = $data -replace "<span.*?>", "" #Remove span tag
     $data = $data -replace "<div.*?>", "" #Remove div tag
     $data = $data -replace "</div>", "" #Remove div tag
-    $data = $data -creplace '(?m)^\s*\r?\n','' #Remove any * on lines of their own
+    $data = $data -creplace '(?m)^\s*\r?\n', '' #Remove any * on lines of their own
     
-    $data = $data -Replace "<h1>","# "
-    $data = $data -Replace "<h2>","## "
-    $data = $data -Replace "</h1>",""
-    $data = $data -Replace "</h2>",""
+    $data = $data -Replace "<h1>", "# "
+    $data = $data -Replace "<h2>", "## "
+    $data = $data -Replace "</h1>", ""
+    $data = $data -Replace "</h2>", ""
 
-    $data = $data -creplace '(?m)^\*\S+','*' #Make sure any lines starting with * has one whitespace character after
+    $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
     $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
     $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
-    if ("$env:debug" -eq "true") {
+    if ("$debug" -eq "true") {
         Write-Host "Changelog Process:`n$data`n----------"
     }
     return $data

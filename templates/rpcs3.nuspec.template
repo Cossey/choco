@@ -23,6 +23,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="tools/**" target="tools" />
+    <file src="%toolsfilepath%" target="tools" />
   </files>
 </package>

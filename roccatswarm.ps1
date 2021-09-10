@@ -43,7 +43,7 @@ $files = $fileinfo[2]
 $exes = $files | Where-Object { $_.FullName -like '*.exe' }
 $installfile = $exes[0].FullName
 
-if (!(BuildTemplateParam $tempfolder $templatename $filehash $downloadurl $version $changelog $installfile "")) {return}
-if (!(PackAndClean $tempfolder)) {return}
+if (!(BuildTemplateParam $templatename $filehash $downloadurl $version $changelog $installfile "")) {return}
+if (!(PackAndClean)) {return}
 
 NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)

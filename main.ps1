@@ -6,9 +6,15 @@ $progressPreference = 'silentlyContinue'
 
 . "${PSScriptRoot}/common.ps1"
 
+LoadEnvVars
+
+if ($debug) {
+    Write-Host "Debugging is enabled" -ForegroundColor "Red"
+}
+
 while ($true) {
     Write-Host "Running at $(Get-Date)"
-    
+
     & ${PSScriptRoot}/burnaware.ps1
     & ${PSScriptRoot}/rpcs3.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
@@ -16,6 +22,6 @@ while ($true) {
 
     Write-Host "-----------------------------"
     
-    if (-not (Test-Path env:DELAY)) {break}
-    Start-Sleep -Seconds ([int]$Env:DELAY * 60)
+    if (-not $DELAY) {break}
+    Start-Sleep -Seconds ([int]$DELAY * 60)
 }

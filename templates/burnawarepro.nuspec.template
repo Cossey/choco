@@ -7,17 +7,17 @@
     <owners>Stewart Cossey</owners>
     <title>Burnaware Professional</title>
     <authors>Burnaware</authors>
-    <projectUrl>http://www.burnaware.com/</projectUrl>
+    <projectUrl>https://www.burnaware.com/</projectUrl>
     <copyright>2018 Burnaware</copyright>
-    <licenseUrl>http://www.burnaware.com/eula.html</licenseUrl>
+    <licenseUrl>https://www.burnaware.com/eula.html</licenseUrl>
 	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/burnaware.png</iconUrl>
-    <docsUrl>http://www.burnaware.com/online-manual.html</docsUrl>
+    <docsUrl>https://www.burnaware.com/online-manual.html</docsUrl>
     <tags>burnaware cd dvd iso</tags>
     <summary>BurnAware is a full-featured and free burning software to create CD, DVD and Blu-ray of all types, including M-Disc.</summary>
     <description>BurnAware is a full-fledged, easy-to-use burning software which allows users to write all types of files such as digital photos, pictures, archives, documents, music and videos to CDs, DVDs and Blu-ray Discs (including M-Disc). With BurnAware, you also be able to create bootable or multisession discs, high-quality Audio CDs and Video DVDs, make and burn ISO images, copy and backup discs, extract audio tracks, erase and verify data, recover data from multisession or unreadable discs.</description>
     <releaseNotes>%description%</releaseNotes>
   </metadata>
   <files>
-    <file src="tools/**" target="tools" />
+    <file src="%toolsfilepath%" target="tools" />
   </files>
 </package>

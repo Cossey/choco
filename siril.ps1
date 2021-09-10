@@ -9,17 +9,16 @@ $oldversion = GetLastVersion $verfile
 if (CheckSkip $oldversion) {return}
 
 $releasespage = Invoke-WebRequest -Uri "https://free-astro.org/index.php?title=Siril:releases"
+$releaseslinks = $releasespage.Links | Where-Object { $_.HRef -match "Siril:[0-9.]+" }
+$releaseurl = $releaseslinks[0].HRef
 
-$releasespagedata = [regex]::match($releasespage.Content, "<div class=`"mw-parser-output`">(.*?)</div>", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
-$releasedata = [regex]::match($releasespagedata, "<li>(.*?)</li>").Groups[1].Value
+$version = [regex]::match($releaseurl, "Siril:([0-9.]*)").Groups[1].Value
 
-$version = [regex]::match($releasedata, "title=`"Siril:(.*?)`"").Groups[1].Value
+Write-Host "Latest version: $version"
 
 if (VersionNotValid $version $templatename) {return}
 
 if (VersionNotNew $oldversion $version) {return}
-
-$releaseurl = [regex]::match($releasedata, "href=`"(.*?)`"").Groups[1].Value
 
 if ($releaseurl.StartsWith("/")) {
     $releaseurl = "https://free-astro.org" + $releaseurl
@@ -30,7 +29,7 @@ $releasedate = ([regex]::match($releasepagedata.Content, "<b>Release date: (.*?)
 
 Write-Host Release Date $releasedate
 
-$changelog = [regex]::match($releasepagedata.Content, "What?'s new.*?What?'s new.*?</h2>(.*?)(<!--|</div>)", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$changelog = [regex]::match($releasepagedata.Content, "What?'s new.*?</h2>(.*?)(<!--|</div>)", [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 
 $changelog = (ProcessChangelog $changelog)
 
@@ -58,8 +57,8 @@ $result = HashAndSizeFromFileURL $windowsdownload
 $hash = $result[0]
 $size = $result[1]
 
-if (!(BuildTemplate $tempfolder $templatename $hash $windowsdownload $version $description)) {return}
+if (!(BuildTemplate $templatename $hash $windowsdownload $version $description)) {return}
 
-if (!(PackAndClean $tempfolder)) {return}
+if (!(PackAndClean)) {return}
 
 NotePackageUpdate $version $verfile $templatename (GetFileSize $size)

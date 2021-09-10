@@ -18,6 +18,6 @@
       Swarm regroups all your devices together under one piece of software and allows you to customise the functionality of these devices from button functions to different lighting profiles.</description>
   </metadata>
   <files>
-    <file src="tools/**" target="tools" />
+    <file src="%toolsfilepath%" target="tools" />
   </files>
 </package>

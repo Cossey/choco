@@ -2,7 +2,7 @@ PackageName "RPCS3"
 
 #Common Script Vars
 $templatename = "rpcs3"
-$tempfolder = "$temp/$templatename/"
+$tempfolder = Join-Path $temp $templatename
 $verfile = "$templatename.ver"
 $oldversion = GetLastVersion $verfile
 
@@ -40,6 +40,6 @@ if ($shafile) {
     $sha256 = $sha256.Trim()
 }
 
-if (!(BuildTemplate $tempfolder $templatename $sha256 $dlfile $nugetversion "")) {return}
-if (!(PackAndClean $tempfolder)) {return}
+if (!(BuildTemplate $templatename $sha256 $dlfile $nugetversion "")) {return}
+if (!(PackAndClean)) {return}
 NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)

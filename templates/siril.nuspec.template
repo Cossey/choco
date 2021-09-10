@@ -51,6 +51,6 @@
     <releaseNotes>%description%</releaseNotes>
   </metadata>
   <files>
-    <file src="tools/**" target="tools" />
+    <file src="%toolsfilepath%" target="tools" />
   </files>
 </package>

@@ -38,6 +38,12 @@ for ($i=0; $i -lt $links.Count; $i++) {
     }
 }
 
+if ($null -eq $freeurl) {
+    #Special situation for the free version
+    Write-Host "Burnaware Free URL not found on site, using special location" -ForegroundColor Green
+    $freeurl = "https://www.burnaware.com/downloads/burnaware_cfree_${version}.exe"
+}
+
 #if (DownloadNotValid $freeurl "Burnaware Free") {return}
 if (DownloadNotValid $prourl "Burnaware Pro") {return}
 if (DownloadNotValid $premiumurl "Burnaware Premium") {return}
@@ -70,34 +76,43 @@ Write-Host Release Date $releasedate
 
 #Process Versions
 # Write-Host "Burnaware Free" -ForegroundColor Yellow
-# $result = HashAndSizeFromFileURL $freeurl
-# $freehash = $result[0]
-# $freesize = $result[1]
-# if (BuildTemplate $tempfolder "burnawarefree" $freehash $freeurl $version $description) {
+# $freefilename = "burnaware_cfree_${version}.exe"
+# $freesize = DownloadInstallerFile $freeurl $freefilename
+
+# if (BuildTemplate "burnawarefree" "" $freefilename $version $description) {
+#     if (!(PackAndClean)) {return}
+# }
+
+# Write-Host "Burnaware Pro" -ForegroundColor Yellow
+# $profilename = "burnaware_pro_${version}.exe"
+# $profilename64 = "burnaware_pro_${version}_x64.exe"
+# $prosize = DownloadInstallerFile $prourl $profilename
+# $prosize64 = DownloadInstallerFile $prourl64 $profilename64
+
+# if (BuildTemplate64 "burnawarepro" "" $profilename "" $profilename64 $version $description "" "") {
+#     if (!(PackAndClean)) {return}
+# }
+
+Write-Host "Burnaware Premium" -ForegroundColor Yellow
+$premiumfilename = "burnaware_premium_${version}.exe"
+$premiumfilename64 = "burnaware_premium_${version}_x64.exe"
+$premiumsize = DownloadInstallerFile $premiumurl $premiumfilename
+$premiumsize64 = DownloadInstallerFile $premiumurl64 $premiumfilename64
+
+if (BuildTemplate64 "burnawarepremium" "" $premiumfilename "" $premiumfilename64 $version $description "" "") {
+    if (!(PackAndClean)) {return}
+}
+
+
+# Write-Host "Burnaware Premium" -ForegroundColor Yellow
+# $result = HashAndSizeFromFileURL $premiumurl
+# $prehash = $result[0]
+# $presize = $result[1]
+# $result = HashAndSizeFromFileURL $premiumurl64
+# $prehash64 = $result[0]
+# $presize64 = $result[1]
+# if (BuildTemplate64 $tempfolder "burnawarepremium" $prehash $premiumurl $prehash64 $premiumurl64 $version $description "" "") {
 #     if (!(PackAndClean $tempfolder)) {return}
 # }
 
-Write-Host "Burnaware Pro" -ForegroundColor Yellow
-$result = HashAndSizeFromFileURL $prourl
-$prohash = $result[0]
-$prosize = $result[1]
-$result = HashAndSizeFromFileURL $prourl64
-$prohash64 = $result[0]
-$prosize64 = $result[1]
-if (BuildTemplate64 $tempfolder "burnawarepro" $prohash $prourl $prohash64 $prourl64 $version $description "" "") {
-    if (!(PackAndClean $tempfolder)) {return}
-}
-
-Write-Host "Burnaware Premium" -ForegroundColor Yellow
-$result = HashAndSizeFromFileURL $premiumurl
-$prehash = $result[0]
-$presize = $result[1]
-$result = HashAndSizeFromFileURL $premiumurl64
-$prehash64 = $result[0]
-$presize64 = $result[1]
-if (BuildTemplate64 $tempfolder "burnawarepremium" $prehash $premiumurl $prehash64 $premiumurl64 $version $description "" "") {
-    if (!(PackAndClean $tempfolder)) {return}
-}
-
-#`r`nFree: $(GetFileSize $freesize)
-NotePackageUpdateMsg $version $verfile "Burnaware Packages updated to $version`r`nPro: $(GetFileSize $prosize), $(GetFileSize $prosize64)`r`nPre: $(GetFileSize $presize), $(GetFileSize $presize64)"
+# NotePackageUpdateMsg $version $verfile "Burnaware Packages updated to $version`r`nFree: $(GetFileSize $freesize)`r`nPro: $(GetFileSize $prosize), $(GetFileSize $prosize64)`r`nPre: $(GetFileSize $presize), $(GetFileSize $presize64)"
