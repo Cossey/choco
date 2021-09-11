@@ -24,14 +24,15 @@ if (VersionNotNew $oldversion $version) {return}
 
 $changelogjson = $item.changelog.'ROCCAT® Swarm'[0].changelog;
 
-foreach ($log in $changelogjson) {
-    $changelogdata = "$changelogdata`n* $log"
-}
+$changelogdata = Join-String -InputObject $changelogjson -Separator "`r`n"
 
 $changelog = @"
 $release
+
 $changelogdata
 "@
+
+DebugOut "Changelog: $changelog"
 
 $downloadurl = $item.url
 

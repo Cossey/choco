@@ -79,8 +79,10 @@ Write-Host "Burnaware Free" -ForegroundColor Yellow
 $freefilename = "burnaware_cfree_${version}.exe"
 $freesize = DownloadInstallerFile $freeurl $freefilename
 
-if (BuildTemplate "burnawarefree" "" $freefilename $version $description) {
-    if (!(PackAndClean)) {return}
+if (IncludeEULA "https://www.burnaware.com/eula.html" "<div class=`"container mt-5`">(.*?)</div>") {
+    if (BuildTemplate "burnawarefree" "" $freefilename $version $description) {
+        if (!(PackAndClean)) {return}
+    }
 }
 
 Write-Host "Burnaware Pro" -ForegroundColor Yellow
@@ -89,8 +91,10 @@ $profilename64 = "burnaware_pro_${version}_x64.exe"
 $prosize = DownloadInstallerFile $prourl $profilename
 $prosize64 = DownloadInstallerFile $prourl64 $profilename64
 
-if (BuildTemplate64 "burnawarepro" "" $profilename "" $profilename64 $version $description "" "") {
-    if (!(PackAndClean)) {return}
+if (IncludeEULA "https://www.burnaware.com/eula.html" "<div class=`"container mt-5`">(.*?)</div>") {
+    if (BuildTemplate64 "burnawarepro" "" $profilename "" $profilename64 $version $description "" "") {
+        if (!(PackAndClean)) {return}
+    }
 }
 
 Write-Host "Burnaware Premium" -ForegroundColor Yellow
@@ -99,8 +103,10 @@ $premiumfilename64 = "burnaware_premium_${version}_x64.exe"
 $premiumsize = DownloadInstallerFile $premiumurl $premiumfilename
 $premiumsize64 = DownloadInstallerFile $premiumurl64 $premiumfilename64
 
-if (BuildTemplate64 "burnawarepremium" "" $premiumfilename "" $premiumfilename64 $version $description "" "") {
-    if (!(PackAndClean)) {return}
+if (IncludeEULA "https://www.burnaware.com/eula.html" "<div class=`"container mt-5`">(.*?)</div>") {
+    if (BuildTemplate64 "burnawarepremium" "" $premiumfilename "" $premiumfilename64 $version $description "" "") {
+        if (!(PackAndClean)) {return}
+    }
 }
 
 NotePackageUpdateMsg $version $verfile "Burnaware Packages updated to $version`r`nFree: $(GetFileSize $freesize)`r`nPro: $(GetFileSize $prosize), $(GetFileSize $prosize64)`r`nPre: $(GetFileSize $premiumsize), $(GetFileSize $premiumsize64)"

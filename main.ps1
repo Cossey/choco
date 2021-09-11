@@ -8,9 +8,7 @@ $progressPreference = 'silentlyContinue'
 
 LoadEnvVars
 
-if ("$debug" -eq "true") {
-    Write-Host "Debugging is enabled" -ForegroundColor "Red"
-}
+DebugOut "Debugging is enabled"
 
 while ($true) {
     Write-Host "Running at $(Get-Date)"

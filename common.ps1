@@ -47,13 +47,14 @@ function LoadEnvVar ($var, $default) {
         exit -1
     }
 
-    #echo "EV $var $val $val_file"
+    DebugOut "Variable $var Value $val File $val_file"
 
     if (-not $val -and -not $val_file) {
         Set-Variable -Name $var -Value $default -Scope global
     } else {
         if ($val_file) {
             $filedata = (Get-Content $val_file -Raw -ErrorAction Ignore)
+            DebugOut "File $val_file Data $filedata"
             Set-Variable -Name $var -Value $filedata -Scope global
         } else {
             Set-Variable -Name $var -Value $val -Scope global
@@ -130,6 +131,35 @@ function BuildTemplate64 ($name, $hash, $url, $hash64, $url64, $version, $descri
     return $true
 }
 
+function IncludeEULA($url, $regexparse) {
+    $eula = Invoke-WebRequest -Uri $url
+    if ($eula.StatusCode -ne 200) {
+        PackageError "Failed to download EULA from $url"
+        return $false
+    }
+    
+    $eula = $eula.Content
+
+    if ($regexparse) {
+        $eula = [regex]::Match($eula, $regexparse, [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+        DebugOut "EULA: $eula"
+        $eula = ProcessChangelog $eula $true
+        $licensefile = "LICENSE.md"
+    } else {
+        $licensefile = "LICENSE.txt"
+        DebugOut "EULA: $eula"
+    }
+
+    if ($eula.trim().length -eq 0) {
+        Write-Host "Failed to parse EULA from $url"
+        return $false
+    }
+
+    $eulapath = Join-Path "${tempfolder}" "tools" "$licensefile"
+    $eula | Out-File -Path $eulapath
+    return $true
+}
+
 function DownloadInstallerFile($url, $filename) {
     $dlpath = Join-Path "${tempfolder}" "tools"
     $fullpath = Join-Path $dlpath $filename
@@ -154,7 +184,7 @@ function DownloadFile($url, $out) {
     $hash = (Get-FileHash $out).Hash
     $file = (Get-Item $out).Length
 
-    Write-Host "File Size `"$file`" Hash `"$hash`"" -ForegroundColor Green
+    DebugOut "File Size `"$file`" Hash `"$hash`""
     
     return @($hash, $file)
 }
@@ -172,7 +202,7 @@ function HashSizeAndContentsFromZipFileURL ($url) {
     $zip = [IO.Compression.ZipFile]::OpenRead($out)
     $filelist = $zip.Entries
     $zip.Dispose()
-    Write-Host "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)" -ForegroundColor Green
+    DebugOut "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)"
     if ("$debug" -ne "true") {
         Remove-Item -path $out
         Write-Host "Removed temporary file `"$out`""
@@ -190,7 +220,7 @@ function HashAndSizeFromFileURL ($url) {
     Invoke-WebRequest -Uri $url -outfile $out
     $hash = (Get-FileHash $out).Hash
     $filesize = (Get-Item $out).Length
-    Write-Host "File Size `"$filesize`" Hash `"$hash`"" -ForegroundColor Green
+    DebugOut "File Size `"$filesize`" Hash `"$hash`""
     if ("$debug" -ne "true") {
         Remove-Item -path $out
         Write-Host "Removed temporary file `"$out`""
@@ -369,14 +399,31 @@ function SendPushover($title, $message) {
     }
 }
 
-function ProcessChangelog ($data) {
+function DebugOut ($message) {
+    if ("$debug" -eq "true") {
+        Write-Host $message -ForegroundColor Red
+    }
+}
+
+function ProcessChangelog ($data, $respnl) {
+
+    $nl=""
+    if ($respnl -eq $true) {
+        $nl="`r`n"
+        DebugOut "Respect Newlines"
+
+        $data = $data -replace "`r", ""
+        $data = $data -replace "`n", ""    
+    }
+
     $data = $data -Replace '(?ms)<a.*?href="(.*?)".*?>(.*?)</a>', '[$2]($1)'  #Create a markdown link
     $data = $data -Replace "</li>", "" #Remove closing li tag
     $data = $data -Replace "<li>", "*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
     $data = $data -replace "<b>-</b>", "*" #Convert to *
-    $data = $data -replace "<br />", "" #Remove line break tag
-    $data = $data -replace "<br/>", "" #Remove line break tag
+    $data = $data -replace "<br />", "$nl" #Remove line break tag
+    $data = $data -replace "<br/>", "$nl" #Remove line break tag
+    $data = $data -replace "<br>", $nl #Remove line break tag
     $data = $data -replace "</p>", "" #Remove closing p tag
     $data = $data -replace "<ul>", "" #Remove ul tag
     $data = $data -replace "</ul>", "" #Remove ul tag
@@ -384,7 +431,7 @@ function ProcessChangelog ($data) {
     $data = $data -replace "<span.*?>", "" #Remove span tag
     $data = $data -replace "<div.*?>", "" #Remove div tag
     $data = $data -replace "</div>", "" #Remove div tag
-    $data = $data -creplace '(?m)^\s*\r?\n', '' #Remove any * on lines of their own
+    $data = $data -creplace '\s*\*\s*(\r?\n|$)', '' #Remove any empty lines on lines of their own
     
     $data = $data -Replace "<h1>", "# "
     $data = $data -Replace "<h2>", "## "
@@ -394,8 +441,9 @@ function ProcessChangelog ($data) {
     $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
     $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
     $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
-    if ("$debug" -eq "true") {
-        Write-Host "Changelog Process:`n$data`n----------"
-    }
+
+    $data = $data.Trim() # Trim spaces from stard and end of string
+
+    DebugOut "Changelog Process:`n$data`n----------"
     return $data
 }
