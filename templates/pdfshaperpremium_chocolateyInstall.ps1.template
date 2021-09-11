@@ -1,0 +1,19 @@
+$ErrorActionPreference = 'Stop';
+$toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+$file       = "$toolsDir\%downloadurl%"
+$file64     = "$toolsDir\%downloadurl64%"
+
+$packageArgs = @{
+  packageName    = $env:ChocolateyPackageName
+  fileType       = 'EXE' 
+  file           = $file
+  file64         = $file64
+
+  softwareName   = 'PDFShaper Premium*'
+
+  silentArgs     = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+  validExitCodes = @(0)
+
+}
+
+Install-ChocolateyInstallPackage @packageArgs

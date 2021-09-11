@@ -1,0 +1,3 @@
+The publisher, Burnaware has givern permission to distribute this software on the Chocolatey community repository.
+
+Please refer to the VERIFICATION.pdf for more information.
