@@ -8,7 +8,7 @@
     <title>Burnaware Free</title>
     <authors>Burnaware</authors>
     <projectUrl>http://www.burnaware.com/</projectUrl>
-    <copyright>2018 Burnaware</copyright>
+    <copyright>%copyrightyear% Burnaware</copyright>
     <licenseUrl>http://www.burnaware.com/eula.html</licenseUrl>
 	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/burnaware.png</iconUrl>
     <docsUrl>http://www.burnaware.com/online-manual.html</docsUrl>

@@ -8,7 +8,7 @@
     <title>Burnaware Professional</title>
     <authors>Burnaware</authors>
     <projectUrl>https://www.burnaware.com/</projectUrl>
-    <copyright>2018 Burnaware</copyright>
+    <copyright>%copyrightyear% Burnaware</copyright>
     <licenseUrl>https://www.burnaware.com/eula.html</licenseUrl>
 	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/burnaware.png</iconUrl>
     <docsUrl>https://www.burnaware.com/online-manual.html</docsUrl>
