@@ -96,6 +96,7 @@ function BuildTemplate64 ($name, $hash, $url, $hash64, $url64, $version, $descri
     $nstemplate = $nstemplate -replace "%param1%", "$param1"
     $nstemplate = $nstemplate -replace "%param2%", "$param2"
     $nstemplate = $nstemplate -replace "%toolsfilepath%", "$(Join-Path "tools" "**")"
+    $nstemplate = $nstemplate -replace "%copyrightyear%", "$(Get-Date -format yyyy)"
 
     $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
     $nstemplate = $nstemplate -replace "%downloadurl64%", "$url64"
@@ -142,8 +143,7 @@ function IncludeEULA($url, $regexparse) {
 
     if ($regexparse) {
         $eula = [regex]::Match($eula, $regexparse, [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
-        DebugOut "EULA: $eula"
-        $eula = ProcessChangelog $eula $true
+        $eula = ProcessChangelog $eula $true $true
         $licensefile = "LICENSE.md"
     } else {
         $licensefile = "LICENSE.txt"
@@ -170,6 +170,9 @@ function DownloadInstallerFile($url, $filename) {
     Invoke-WebRequest -Uri $url -outfile $fullpath
 
     $filesize = (Get-Item $fullpath).Length
+
+    #create ignore for installer to stop it from being shimmed
+    New-Item "$fullpath.ignore" -type file -force | Out-Null
 
     Write-Host "File Size `"$filesize`"" -ForegroundColor Green
     
@@ -405,7 +408,7 @@ function DebugOut ($message) {
     }
 }
 
-function ProcessChangelog ($data, $respnl) {
+function ProcessChangelog ($data, $respnl, $spacing) {
 
     $nl=""
     if ($respnl -eq $true) {
@@ -416,11 +419,16 @@ function ProcessChangelog ($data, $respnl) {
         $data = $data -replace "`n", ""    
     }
 
+    if ($spacing -eq $true) {
+        $data = $data -replace "\ \ +", " "
+    }
+
     $data = $data -Replace '(?ms)<a.*?href="(.*?)".*?>(.*?)</a>', '[$2]($1)'  #Create a markdown link
     $data = $data -Replace "</li>", "" #Remove closing li tag
     $data = $data -Replace "<li>", "*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
     $data = $data -replace "<b>-</b>", "*" #Convert to *
+    $data = $data -replace "&bull;", "*" #Convert to *
     $data = $data -replace "<br />", "$nl" #Remove line break tag
     $data = $data -replace "<br/>", "$nl" #Remove line break tag
     $data = $data -replace "<br>", $nl #Remove line break tag
