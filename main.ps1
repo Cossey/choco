@@ -8,7 +8,7 @@ $progressPreference = 'silentlyContinue'
 
 LoadEnvVars
 
-DebugOut "Debugging is enabled"
+choco feature enable --name="'useEnhancedExitCodes'"
 
 while ($true) {
     Write-Host "Running at $(Get-Date)"

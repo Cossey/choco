@@ -1,19 +1,28 @@
 #common functions for scripts
 
 function LoadEnvVars () {
-    LoadEnvVar "DELAY"
     LoadEnvVar "DEBUG" "false"
-    LoadEnvVar "CKEY"
-    LoadEnvVar "AKEY"
-    LoadEnvVar "UKEY"
-
+    
     if ($DEBUG -ne "false" -and $DEBUG -ne "true") {
         Write-Host "DEBUG must be true or false"
         exit -2
     }
+     
+    DebugOut "Debugging is enabled"
+
+    LoadEnvVar "DELAY"
+    LoadEnvVar "MAX_PUSH_ATTEMPTS" 1
+    LoadEnvVar "CKEY"
+    LoadEnvVar "AKEY"
+    LoadEnvVar "UKEY"
 
     if ($DELAY -and $DELAY -notmatch "[0-9]+") {
         Write-Host "DELAY must be a number"
+        exit -2
+    }
+
+    if ($MAX_PUSH_ATTEMPTS -and $MAX_PUSH_ATTEMPTS -notmatch "[0-9]+") {
+        Write-Host "MAX_PUSH_ATTEMPTS must be a number"
         exit -2
     }
 
@@ -37,10 +46,12 @@ function LoadEnvVars () {
 function LoadEnvVar ($var, $default) {
     try {
         $val = (Get-Item env:"$var" -ErrorAction Ignore).Value
-    } catch {}
+    }
+    catch {}
     try {
         $val_file = (Get-Item env:"${var}_FILE" -ErrorAction Ignore).Value
-    } catch {}
+    }
+    catch {}
 
     if ($val -and $val_file) {
         Write-Host "Variable $var and ${var}_FILE are both defined!"
@@ -51,12 +62,14 @@ function LoadEnvVar ($var, $default) {
 
     if (-not $val -and -not $val_file) {
         Set-Variable -Name $var -Value $default -Scope global
-    } else {
+    }
+    else {
         if ($val_file) {
             $filedata = (Get-Content $val_file -Raw -ErrorAction Ignore)
             DebugOut "File $val_file Data $filedata"
             Set-Variable -Name $var -Value $filedata -Scope global
-        } else {
+        }
+        else {
             Set-Variable -Name $var -Value $val -Scope global
         }
     }
@@ -145,7 +158,8 @@ function IncludeEULA($url, $regexparse) {
         $eula = [regex]::Match($eula, $regexparse, [Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
         $eula = ProcessChangelog $eula $true $true
         $licensefile = "LICENSE.md"
-    } else {
+    }
+    else {
         $licensefile = "LICENSE.txt"
         DebugOut "EULA: $eula"
     }
@@ -256,39 +270,77 @@ function ExtractZipFromURL ($url) {
     }
 }
 
+function DoPush ($attempt, $backoff) {
+    $attempt = ($attempt + 1)
+    if ($null -eq $backoff) {
+        $backoff = 60
+    }
+    else {
+        $backoff = $backoff * 2
+    }
+
+    Write-Host "Pushing..."
+    $result = (choco push --api-key=$CKEY -dv)
+    if ($LASTEXITCODE -ne "0") {
+        Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
+        if ($attempt -gt $MAX_PUSH_ATTEMPTS) {
+            PackageError "Failed to push package $tempfolder after $maxattempts attempts"
+            return $false
+        }
+        else {
+            Write-Host "Retrying in $($backoff / 60) minutes..."
+            Start-Sleep -Seconds $backoff
+            DoPush $attempt $backoff
+        }
+    }
+    return $true
+}
+
 function PackAndClean ($ignorepushresult) {
     Set-Location -Path "$tempfolder"
     Write-Host "Packing `"$tempfolder`"..."
     $result = (choco pack)
     if ($LASTEXITCODE -ne "0") {
         if ("$debug" -ne "true") {
-            Write-Host "Pack return exit code $LASTEXITCODE`n-----------`n$result`n-----------"
+            Write-Host "Pack return exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n-----------"
+            PackageError "Package $tempfolder Pack Error`n$result"
             Remove-Item -Path "$tempfolder" -Recurse -Force
         }
         return $false
     }
     if ("$debug" -ne "true") {
-        Write-Host "Pushing..."
-        $result = (choco push --api-key=$CKEY)
-        if ($LASTEXITCODE -ne "0") {
-            Write-Host "Exit code $LASTEXITCODE`n-----------`n$result`n----------`nRetrying..."
-            $result = (choco push --api-key=$CKEY)
-            if ($LASTEXITCODE -ne "0") {
-                Write-Host "Could not push to chocolatey. Exit code $LASTEXITCODE`n----------`n$result`n----------"
-
-                if (($null -eq $ignorepushresult -or $ignorepushresult -ne "true")) {
-                    Write-Host "Assume Package success due to override."
-                }
-                else {
-                    
-                    if ("$debug" -ne "true") {
-                        Write-Host "Cleaning..."
-                        Remove-Item -Path "$tempfolder" -Recurse -Force
-                    }
-                    return $false
-                }
+        if (DoPush 0) {
+            Write-Host "Push successfull"
+        } else {
+            if ("$debug" -ne "true") {
+                Write-Host "Cleaning..."
+                Remove-Item -Path "$tempfolder" -Recurse -Force
             }
+            return $false
         }
+        # Write-Host "Pushing..."
+        # $result = (choco push --api-key=$CKEY)
+        # if ($LASTEXITCODE -ne "0") {
+        #     Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------`nRetrying in 3 minutes..."
+        #     Start-Sleep -Seconds 180
+        #     $result = (choco push --api-key=$CKEY)
+        #     if ($LASTEXITCODE -ne "0") {
+        #         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n----------`n$result`n----------"
+
+        #         PackageError "Package $tempfolder Push Error`n$result"
+        #         if (($ignorepushresult -ne "true")) {
+        #             Write-Host "Assume Package success due to override."
+        #         }
+        #         else {
+        #             Write-Host "Package push failed!"
+        #             if ("$debug" -ne "true") {
+        #                 Write-Host "Cleaning..."
+        #                 Remove-Item -Path "$tempfolder" -Recurse -Force
+        #             }
+        #             return $false
+        #         }
+        #     }
+        # }
     }
     Set-Location -Path $temp
     if ("$debug" -ne "true") {
@@ -331,7 +383,7 @@ function GetLastVersion ($verfile) {
 }
 
 function GetFileSize ($bytesize) {
-    "{0:N2}MB" -f ($bytesize / 1MB)
+    "{ 0:N2 }MB" -f ($bytesize / 1MB)
 }
 
 function ConvertDashVersion ($version, $dashpostfix) {
@@ -376,7 +428,7 @@ function VersionNotNew($oldversion, $newversion) {
 }
 
 function VersionNotValid($version, $packagename) {
-    if ($version -match "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+?|\-[a-z]+[0-9]+)?") {
+    if ($version -match "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+? | \-[a-z]+[0-9]+)?") {
         return $false
     }
     Write-Host "Cannot validate version number"
@@ -427,31 +479,31 @@ function ProcessChangelog ($data, $respnl, $spacing) {
     $data = $data -Replace "</li>", "" #Remove closing li tag
     $data = $data -Replace "<li>", "*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
-    $data = $data -replace "<b>-</b>", "*" #Convert to *
-    $data = $data -replace "&bull;", "*" #Convert to *
-    $data = $data -replace "<br />", "$nl" #Remove line break tag
-    $data = $data -replace "<br/>", "$nl" #Remove line break tag
-    $data = $data -replace "<br>", $nl #Remove line break tag
-    $data = $data -replace "</p>", "" #Remove closing p tag
-    $data = $data -replace "<ul>", "" #Remove ul tag
-    $data = $data -replace "</ul>", "" #Remove ul tag
-    $data = $data -replace "</span>", "" #Remove span tag
-    $data = $data -replace "<span.*?>", "" #Remove span tag
-    $data = $data -replace "<div.*?>", "" #Remove div tag
-    $data = $data -replace "</div>", "" #Remove div tag
-    $data = $data -creplace '\s*\*\s*(\r?\n|$)', '' #Remove any empty lines on lines of their own
+            $data = $data -replace "<b>-</b>", "*" #Convert to *
+            $data = $data -replace "&bull;", "*" #Convert to *
+            $data = $data -replace "<br />", "$nl" #Remove line break tag
+            $data = $data -replace "<br/>", "$nl" #Remove line break tag
+            $data = $data -replace "<br>", $nl #Remove line break tag
+            $data = $data -replace "</p>", "" #Remove closing p tag
+            $data = $data -replace "<ul>", "" #Remove ul tag
+            $data = $data -replace "</ul>", "" #Remove ul tag
+            $data = $data -replace "</span>", "" #Remove span tag
+            $data = $data -replace "<span.*?>", "" #Remove span tag
+            $data = $data -replace "<div.*?>", "" #Remove div tag
+            $data = $data -replace "</div>", "" #Remove div tag
+            $data = $data -creplace '\s*\*\s*(\r?\n|$)', '' #Remove any empty lines on lines of their own
     
-    $data = $data -Replace "<h1>", "# "
-    $data = $data -Replace "<h2>", "## "
-    $data = $data -Replace "</h1>", ""
-    $data = $data -Replace "</h2>", ""
+            $data = $data -Replace "<h1>", "# "
+            $data = $data -Replace "<h2>", "## "
+            $data = $data -Replace "</h1>", ""
+            $data = $data -Replace "</h2>", ""
 
-    $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
-    $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
-    $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
+            $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
+            $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
+            $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
 
-    $data = $data.Trim() # Trim spaces from stard and end of string
+            $data = $data.Trim() # Trim spaces from stard and end of string
 
-    DebugOut "Changelog Process:`n$data`n----------"
-    return $data
-}
+            DebugOut "Changelog Process:`n$data`n----------"
+            return $data
+        }
