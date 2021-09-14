@@ -1,14 +1,14 @@
 #common functions for scripts
 
 function LoadEnvVars () {
-    LoadEnvVar "DEBUG" "false"
+    Set-Variable -Name "DEBUG" -Value $env:debug -Scope global
     
     if ($DEBUG -ne "false" -and $DEBUG -ne "true") {
         Write-Host "DEBUG must be true or false"
         exit -2
     }
      
-    DebugOut "Debugging is enabled"
+    DebugOut "DEBUGGING IS ENABLED!"
 
     LoadEnvVar "DELAY"
     LoadEnvVar "MAX_PUSH_ATTEMPTS" 1
@@ -174,12 +174,42 @@ function IncludeEULA($url, $regexparse) {
     return $true
 }
 
+function IncludeFrom7zURL($url) {
+    $dlpath = Join-Path "${tempfolder}" "tools"
+    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
+    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
+    $out = $(Join-Path "${temp}" "${randomstring}")
+
+    Write-Host "Downloading 7z file at $url to $out..."
+    Invoke-WebRequest -Uri $url -outfile $out
+
+    $result = 7z x $out -o"${dlpath}" -t7z -y
+
+    if ($LASTEXITCODE -ne "0") {
+        PackageError "Error $LASTEXITCODE extracting 7z file for $tempfolder"
+        return $false
+    }
+    return $true
+}
+
+function RemoveSubfolder() {
+    $tpath = Join-Path "${tempfolder}" "tools"
+    $filelist = Get-ChildItem -Path $tpath -File -ErrorAction Ignore
+    $folderlist = Get-ChildItem -Path $tpath -Directory -ErrorAction Ignore
+
+    if ($filelist.Length -eq 0 -and $folderlist.Length -eq 1) {
+        Write-Host "Shifting Files..."
+        Move-Item -Path $(Join-Path ${folderlist} "*") -Destination $tpath -Force -ErrorAction Ignore
+        Remove-Item -Path ${folderlist} -ErrorAction Ignore
+    }
+}
+
 function DownloadInstallerFile($url, $filename) {
     $dlpath = Join-Path "${tempfolder}" "tools"
     $fullpath = Join-Path $dlpath $filename
     New-Item -ItemType Directory -Path $dlpath -ErrorAction Ignore | Out-Null
 
-    Write-Host "Downloading File to `"$fullpath`"..."
+    Write-Host "Download installer file at $url to $fullpath"
     
     Invoke-WebRequest -Uri $url -outfile $fullpath
 
@@ -318,29 +348,6 @@ function PackAndClean ($ignorepushresult) {
             }
             return $false
         }
-        # Write-Host "Pushing..."
-        # $result = (choco push --api-key=$CKEY)
-        # if ($LASTEXITCODE -ne "0") {
-        #     Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------`nRetrying in 3 minutes..."
-        #     Start-Sleep -Seconds 180
-        #     $result = (choco push --api-key=$CKEY)
-        #     if ($LASTEXITCODE -ne "0") {
-        #         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n----------`n$result`n----------"
-
-        #         PackageError "Package $tempfolder Push Error`n$result"
-        #         if (($ignorepushresult -ne "true")) {
-        #             Write-Host "Assume Package success due to override."
-        #         }
-        #         else {
-        #             Write-Host "Package push failed!"
-        #             if ("$debug" -ne "true") {
-        #                 Write-Host "Cleaning..."
-        #                 Remove-Item -Path "$tempfolder" -Recurse -Force
-        #             }
-        #             return $false
-        #         }
-        #     }
-        # }
     }
     Set-Location -Path $temp
     if ("$debug" -ne "true") {
@@ -383,7 +390,7 @@ function GetLastVersion ($verfile) {
 }
 
 function GetFileSize ($bytesize) {
-    "{ 0:N2 }MB" -f ($bytesize / 1MB)
+    return (($bytesize / 1MB).ToString("0.00") + "MB")
 }
 
 function ConvertDashVersion ($version, $dashpostfix) {
@@ -404,7 +411,7 @@ function NotePackageUpdate ($version, $verfile, $name, $size) {
     if ("$debug" -ne "true") {
         $version | Out-File $(Join-Path "${datapath}" "${verfile}") -NoNewline
     }
-    if ($null -eq $size) {
+    if ($null -ne $size) {
         Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
         SendPushover "Package Updated" "$name updated to $version [$size]"
     }
