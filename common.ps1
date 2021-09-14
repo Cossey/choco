@@ -3,7 +3,7 @@
 function LoadEnvVars () {
     Set-Variable -Name "DEBUG" -Value $env:debug -Scope global
     
-    if ($DEBUG -ne "false" -and $DEBUG -ne "true") {
+    if ($DEBUG -and $DEBUG -ne "false" -and $DEBUG -ne "true") {
         Write-Host "DEBUG must be true or false"
         exit -2
     }
