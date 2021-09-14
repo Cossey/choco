@@ -7,8 +7,8 @@
     <owners>Stewart Cossey</owners>
     <title>ProxAllium</title>
     <authors>Damon Harris</authors>
-    <projectUrl>https://proxallium.tuxfamily.org/</projectUrl>
-    <iconUrl>https://download.tuxfamily.org/proxallium/icons/128.png</iconUrl>
+    <projectUrl>https://proxallium.dtw.tools/</projectUrl>
+    <iconUrl>https://download.tuxfamily.org/proxallium/icons/256.png</iconUrl>
     <copyright>MIT License</copyright>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/DcodingTheWeb/ProxAllium</projectSourceUrl>
@@ -18,7 +18,7 @@
     <summary>A GUI frontend for Tor.</summary>
     <description>ProxAllium is a GUI frontend to Tor. You can use it to easily create a proxy and use with it programs (like browsers, mail clients, chat clients etc.) to circumvent censorship and also to encrypt your connection.
 
-      **Requires either the `tor` or `tor-browser` bundle to be installed.**
+      **Requires Tor to function, you can get it from the `tor` or `tor-browser` bundle packages.**
     </description>
   </metadata>
   <files>
