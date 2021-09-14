@@ -2,8 +2,9 @@ FROM kosdk/choco:ps
 
 LABEL maintainer="stewart.cossey@gmail.com"
 
-RUN apt-get update && apt-get install -y \
-    procps \
+RUN apt-get update \
+    && apt-get install -y \
+    procps p7zip-full \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pwsh -Command "Install-Module -Name PowerShellPushOver -Force"

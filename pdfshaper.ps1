@@ -1,7 +1,7 @@
 PackageName "PDF Shaper"
 
 #Common Script Vars
-$tempfolder = Join-Path $temp "ps"
+$tempfolder = Join-Path $temp "pds"
 $verfile = "pdfshaper.ver"
 $oldversion = GetLastVersion $verfile
 

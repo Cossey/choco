@@ -1,0 +1,3 @@
+ProxAllium licensed under the MIT License (MIT) which allows it to be distributed freely.
+
+The files included are from the releases available on GitHub at https://github.com/DcodingTheWeb/ProxAllium/releases

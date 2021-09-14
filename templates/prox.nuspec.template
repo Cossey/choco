@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>proxallium</id>
+    <version>%fileversion%</version>
+    <packageSourceUrl>https://github.com/Cossey/choco</packageSourceUrl>
+    <owners>Stewart Cossey</owners>
+    <title>ProxAllium</title>
+    <authors>Damon Harris</authors>
+    <projectUrl>https://proxallium.tuxfamily.org/</projectUrl>
+    <iconUrl>https://download.tuxfamily.org/proxallium/icons/128.png</iconUrl>
+    <copyright>MIT License</copyright>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/DcodingTheWeb/ProxAllium</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/DcodingTheWeb/ProxAllium/issues</bugTrackerUrl>
+    <licenseUrl>https://raw.githubusercontent.com/DcodingTheWeb/ProxAllium/master/LICENSE</licenseUrl>
+    <tags>privacy security anonymity tor proxy vpn portable</tags>
+    <summary>A GUI frontend for Tor.</summary>
+    <description>ProxAllium is a GUI frontend to Tor. You can use it to easily create a proxy and use with it programs (like browsers, mail clients, chat clients etc.) to circumvent censorship and also to encrypt your connection.
+
+      **Requires either the `tor` or `tor-browser` bundle to be installed.**
+    </description>
+  </metadata>
+  <files>
+    <file src="%toolsfilepath%" target="tools" />
+  </files>
+</package>

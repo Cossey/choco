@@ -8,7 +8,9 @@ $progressPreference = 'silentlyContinue'
 
 LoadEnvVars
 
-choco feature enable --name="'useEnhancedExitCodes'"
+if ("$debug" -ne "true") {
+    choco feature enable --name="'useEnhancedExitCodes'"
+}
 
 while ($true) {
     Write-Host "Running at $(Get-Date)"
@@ -18,6 +20,7 @@ while ($true) {
     & ${PSScriptRoot}/rpcs3.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
     & ${PSScriptRoot}/siril.ps1
+    & ${PSScriptRoot}/proxallium.ps1
 
     Write-Host "-----------------------------"
     
