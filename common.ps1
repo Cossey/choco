@@ -87,9 +87,9 @@ function SetVersion ($ver) {
         return $false
     }
     
-    DebugOut "Old Version `"$oldversion`" | New Version `"$ver`""
+    DebugOut "Old Version `"$lastversion`" | New Version `"$ver`""
 
-    if ($oldversion -eq $ver) {
+    if ($lastversion -eq $ver) {
         Write-Host "No New Version"
         return $false
     }
