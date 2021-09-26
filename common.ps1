@@ -615,7 +615,7 @@ function SendPushover($title, $message) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
     }
     else {
-        Send-Pushover -Token $AKEY -User $UKEY -MessageTitle $title -Message $message
+       $response = Send-Pushover -Token $AKEY -User $UKEY -MessageTitle $title -Message $message
     }
 }
 
