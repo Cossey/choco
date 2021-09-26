@@ -498,16 +498,22 @@ function DoPush ($attempt, $backoff) {
     if ($LASTEXITCODE -ne "0") {
         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
         if ($attempt -gt $MAX_PUSH_ATTEMPTS) {
-            PackageError "Failed to push package $(TempFolder) after $maxattempts attempts"
+            PackageError "Failed to push package $(TempFolder) after $MAX_PUSH_ATTEMPTS attempts"
             return $false
         }
         else {
             Write-Host "Retrying in $($backoff / 60) minutes..."
             Start-Sleep -Seconds $backoff
-            DoPush $attempt $backoff
+            return DoPush $attempt $backoff
         }
     }
     return $true
+}
+
+function TempCleanup() {
+    $allfiles = Join-Path "$temp" "*"
+    Write-Host "Cleaning up any leftover temporary files..."
+    Remove-Item -Path "$allfiles" -Recurse -Force
 }
 
 # Packs the package and cleans the temporary folder

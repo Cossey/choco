@@ -15,6 +15,8 @@ if ("$debug" -ne "true") {
 while ($true) {
     Write-Host "Running at $(Get-Date)"
 
+    TempCleanup
+    
     & ${PSScriptRoot}/burnaware.ps1
     & ${PSScriptRoot}/pdfshaper.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
