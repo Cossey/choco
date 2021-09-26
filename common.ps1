@@ -538,6 +538,7 @@ function PackAndClean () {
             Write-Host "Push successfull"
         }
         else {
+            Set-Location -Path $temp
             if ("$debug" -ne "true") {
                 Write-Host "Cleaning..."
                 Remove-Item -Path "$(TempFolder)" -Recurse -Force
