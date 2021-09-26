@@ -485,29 +485,31 @@ function ExtractZipFromURL ($url) {
 # Returns:
 #     $true if successful, $false failed to push after attempts
 function DoPush ($attempt, $backoff) {
-    $attempt = ($attempt + 1)
+    $attempt += 1
     if ($null -eq $backoff) {
         $backoff = 60
     }
     else {
-        $backoff = $backoff * 2
+        $backoff *= 2
     }
 
-    Write-Host "Pushing..."
+    Write-Host "Pushing (attempt $attempt)..."
     $result = (choco push --api-key=$CKEY -dv)
     if ($LASTEXITCODE -ne "0") {
         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
-        if ($attempt -gt $MAX_PUSH_ATTEMPTS) {
-            PackageError "Failed to push package $packagename after $MAX_PUSH_ATTEMPTS attempts"
+        if ($attempt -ge $MAX_PUSH_ATTEMPTS) {
+            PackageError "Failed to push package after $MAX_PUSH_ATTEMPTS attempts"
             return $false
         }
         else {
             Write-Host "Retrying in $($backoff / 60) minutes..."
             Start-Sleep -Seconds $backoff
-            return DoPush $attempt $backoff
+            $pushres = DoPush $attempt $backoff
+            return $pushres
         }
-    } 
-    return $true
+    } else {
+        return $true
+    }
 }
 
 function TempCleanup() {
