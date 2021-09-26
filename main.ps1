@@ -8,15 +8,11 @@ $progressPreference = 'silentlyContinue'
 
 LoadEnvVars
 
-if ("$debug" -ne "true") {
-    choco feature enable --name="'useEnhancedExitCodes'"
-}
-
 while ($true) {
     Write-Host "Running at $(Get-Date)"
 
     TempCleanup
-    
+
     & ${PSScriptRoot}/burnaware.ps1
     & ${PSScriptRoot}/pdfshaper.ps1
     & ${PSScriptRoot}/roccatswarm.ps1
