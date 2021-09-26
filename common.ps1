@@ -83,7 +83,7 @@ function SetVersion ($ver) {
     }
     $script:version = $ver
     if ($version -notmatch "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+? | \-[a-z]+[0-9]+)?") {
-        PackageError "Package: $packagename`nInvalid Version: $newversion"
+        PackageError "Invalid Version: $newversion"
         return $false
     }
     
@@ -218,7 +218,7 @@ function IncludeZipFilesFromURL($url, $filetype) {
 
     $result = 7z x "$out" -o"$dlpath" -t"$filetype" -y -bd
     if ($LASTEXITCODE -ne "0") {
-        PackageError "Error $LASTEXITCODE extracting $filetype file for $(TempFolder)"
+        PackageError "Error $LASTEXITCODE extracting $filetype file"
         return $false
     }
     return $true
@@ -469,8 +469,7 @@ function ExtractZipFromURL ($url) {
         return $true
     }
     catch {
-        Write-Host "Error Extracting Zip From `"$url`""
-        PackageError "Package: $(TempFolder)`nError Extracting from URL: $url"
+        PackageError "Error Extracting from URL: $url"
         return $false
     }
     finally {
@@ -499,6 +498,7 @@ function DoPush ($attempt, $backoff) {
         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
         if ($attempt -ge $MAX_PUSH_ATTEMPTS) {
             PackageError "Failed to push package after $MAX_PUSH_ATTEMPTS attempts"
+            Start-Sleep -Seconds 5
             return $false
         }
         else {
@@ -528,7 +528,7 @@ function PackAndClean () {
     if ($LASTEXITCODE -ne "0") {
         Write-Host "Pack return exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n-----------"
         if ("$debug" -ne "true") {
-            PackageError "Package $(TempFolder) Pack Error`n$result"
+            PackageError "Pack Error`n$result"
             Remove-Item -Path "$(TempFolder)" -Recurse -Force
         }
         return $false
@@ -582,11 +582,11 @@ function PackageUpdated ($size) {
     }
     if ($null -ne $size) {
         Write-Host "`"$templatename`" updated to `"$version`" [Size: $(GetFileSize $size)]"
-        SendPushover "Package Updated" "$templatename updated to $version [$(GetFileSize $size)]"
+        SendPushover "Package Updated: $templatename" "Updated to $version [$(GetFileSize $size)]"
     }
     else {
         Write-Host "`"$templatename`" updated to `"$version`""
-        SendPushover "Package Updated" "$templatename updated to $version"
+        SendPushover "Package Updated: $templatename" "Updated to $version"
     }
 }
 
@@ -607,7 +607,7 @@ function GetFileSize ($bytesize) {
 
 function PackageError($message) {
     Write-Host "ERROR: $message" -ForegroundColor Red
-    SendPushover "Package Error: $($packagename)" "$message"
+    SendPushover "Package Error: $($templatename)" "$message"
 }
 
 function SendPushover($title, $message) {
