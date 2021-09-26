@@ -581,7 +581,9 @@ function PackageUpdated ($size) {
 }
 
 function VersionFile () {
-    $(Join-Path "${datapath}" "${templatename}.ver")
+    $verfile = $(Join-Path "${datapath}" "${templatename}.ver")
+    DebugOut "Version file: $verfile"
+    return $verfile
 }
 
 # Converts files from bytes to megabytes
