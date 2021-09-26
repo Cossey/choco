@@ -2,7 +2,7 @@
 
 # Load in all environment variables
 function LoadEnvVars () {
-    Set-Variable -Name "DEBUG" -Value $env:debug -Scope global
+    Set-Variable -Name "DEBUG" -Value $env:DEBUG -Scope global
     
     if ($DEBUG -and $DEBUG -ne "false" -and $DEBUG -ne "true") {
         Write-Host "DEBUG must be true or false"
@@ -87,6 +87,8 @@ function SetVersion ($ver) {
         return $false
     }
     
+    DebugOut "Old Version `"$oldversion`" | New Version `"$ver`""
+
     if ($oldversion -eq $ver) {
         Write-Host "No New Version"
         return $false
