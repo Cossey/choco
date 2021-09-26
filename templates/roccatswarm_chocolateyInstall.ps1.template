@@ -1,12 +1,11 @@
 $ErrorActionPreference = 'Stop';
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url        = "%downloadurl%"
 
 $packageArgs = @{
   packageName   = $env:ChocolateyPackageName
   destination  = "${env:TEMP}/roccatswarm"
-  url           = $url
-  checksum      = '%hash%'
+  url           = '%url32%'
+  checksum      = '%hash32%'
   checksumType  = 'sha256'
 }
 
@@ -20,7 +19,7 @@ $response = Join-Path $toolsDir 'install.iss'
 $installArgs = @{
   packageName  = $env:ChocolateyPackageName
   fileType     = 'exe'
-  file          = "${env:TEMP}/roccatswarm/%param1%"
+  file          = "${env:TEMP}/roccatswarm/%extraparam%"
   silentArgs   = "/s /f1`"$response`""
 }
 

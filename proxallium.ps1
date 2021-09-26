@@ -1,37 +1,16 @@
-PackageName "ProxAllium"
+if (InitPackage("proxallium")) {
+    $dlinfo = GitHubRelease "DcodingTheWeb/ProxAllium" ".*\.7z$"
 
-#Common Script Vars
-$templatename = "prox"
-$tempfolder = Join-Path $temp $templatename
-$verfile = "$templatename.ver"
-$oldversion = GetLastVersion $verfile
+    if (SetVersion($dlinfo.version)) {
+        $installer32 = DownloadRemoteFile $dlinfo.url
 
-if (CheckSkip $oldversion) {return}
+        if (IncludeEULA "https://raw.githubusercontent.com/DcodingTheWeb/ProxAllium/master/LICENSE") {
 
-$dljson = (Invoke-WebRequest "https://api.github.com/repos/DcodingTheWeb/ProxAllium/releases/latest").Content
-$dlinfo = ConvertFrom-Json $dljson
-$version = $dlinfo.tag_name
-
-$version = $version -replace "v",""
-
-if (VersionNotValid $version $templatename) {return}
-
-if (VersionNotNew $oldversion $version) {return}
-
-$files = $dlinfo.assets
-$dlfile = $null
-$fsz = $null
-
-foreach ($file in $files) {
-    if ($file.browser_download_url.EndsWith('7z')) {
-        $dlfile = $file.browser_download_url
-        $fsz = $file.size
+            if (CompileTemplates $installer32) {
+                if (PackAndClean) { 
+                    PackageUpdated $dlinfo.size
+                }
+            }
+        }
     }
 }
-
-if (!(IncludeFrom7zURL $dlfile)) {return}
-RemoveSubfolder
-
-if (!(BuildTemplate $templatename "" "" $version "")) {return}
-if (!(PackAndClean)) {return}
-NotePackageUpdate $version $verfile $templatename $(GetFileSize $fsz)

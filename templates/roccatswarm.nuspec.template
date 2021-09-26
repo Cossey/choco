@@ -11,13 +11,13 @@
     <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/roccatswarm.png</iconUrl>
     <docsUrl>https://en.roccat.org/Support/Product/ROCCAT-Swarm</docsUrl>
     <copyright>ROCCAT</copyright>
-    <releaseNotes>%description%</releaseNotes>
+    <releaseNotes>%releaseinfo%</releaseNotes>
     <tags>roccat driver</tags>
     <summary>Roccat Swarm is a comprehensive peripheral management and customisation utility for ROCCAT products.</summary>
     <description>Roccat Swarm is a comprehensive peripheral management and customisation utility created by Roccat for Roccat peripherals, notably mice, keyboards, headsets, and mousepads. 
       Swarm regroups all your devices together under one piece of software and allows you to customise the functionality of these devices from button functions to different lighting profiles.</description>
   </metadata>
   <files>
-    <file src="%toolsfilepath%" target="tools" />
+    <file src="%tools%" target="tools" />
   </files>
 </package>

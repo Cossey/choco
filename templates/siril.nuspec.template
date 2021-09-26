@@ -48,9 +48,9 @@
       * Enhancement and processing of final images
       * Image compositing tool, combining and aligning multiple channels
       * Plotting various pieces of information about an image sequence</description>
-    <releaseNotes>%description%</releaseNotes>
+    <releaseNotes>%releaseinfo%</releaseNotes>
   </metadata>
   <files>
-    <file src="%toolsfilepath%" target="tools" />
+    <file src="%tools%" target="tools" />
   </files>
 </package>

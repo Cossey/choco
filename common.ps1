@@ -1,5 +1,6 @@
 #common functions for scripts
 
+# Load in all environment variables
 function LoadEnvVars () {
     Set-Variable -Name "DEBUG" -Value $env:debug -Scope global
     
@@ -43,6 +44,7 @@ function LoadEnvVars () {
 
 }
 
+#Load an evironment variable from the environment
 function LoadEnvVar ($var, $default) {
     try {
         $val = (Get-Item env:"$var" -ErrorAction Ignore).Value
@@ -75,76 +77,100 @@ function LoadEnvVar ($var, $default) {
     }
 }
 
-function BuildTemplate ($name, $hash, $url, $version, $description) {
-    return (BuildTemplate64 $name $hash $url $null $null $version $description "" "")
-}
-
-function BuildTemplateParam ($name, $hash, $url, $version, $description, $param1, $param2) {
-    return (BuildTemplate64 $name $hash $url $null $null $version $description $param1 $param2)
-}
-
-function BuildTemplate64 ($name, $hash, $url, $hash64, $url64, $version, $description, $param1, $param2) {
-
-    Write-Host "Validating variables..."
-    if ($null -eq $hash) {
-        PackageError "$name has empty hash"
+function SetVersion ($ver) {
+    if ($ver -match "^v.*") {
+        $ver = $ver.substring(1)
+    }
+    $script:version = $ver
+    if ($version -notmatch "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+? | \-[a-z]+[0-9]+)?") {
+        PackageError "Package: $packagename`nInvalid Version: $newversion"
         return $false
     }
-
-    if ($null -eq $url) {
-        PackageError "$name has empty url"
+    
+    if ($oldversion -eq $ver) {
+        Write-Host "No New Version"
         return $false
     }
+    Write-Host "New Version: $ver"
+    return $true
+}
 
+function SetRootURL ($url) {
+    Write-Host "Root URL: $url"
+    $script:rooturl = $url
+}
 
+function PrefixRootURL ($url) {
+    if ($null -ne $url -and $url.StartsWith("/")) {
+        $url = $rooturl + $url
+    }
+    return $url
+}
+
+function CompileTemplates ($32bit, $64bit, $releaseinfo, $extraparam) {
+    $name = $templatename
     Write-Host "Building `"$name`" templates..."
-    New-Item -ItemType Directory -Path $(Join-Path "${tempfolder}" "tools") -ErrorAction Ignore | Out-Null
+    New-Item -ItemType Directory -Path $(Join-Path "$(TempFolder)" "tools") -ErrorAction Ignore | Out-Null
 
     Write-Host "Building nuspec template..."
     $nstemplate = Get-Content $(Join-Path "${templates}" "${name}.nuspec.template") -Raw
+
+    $nstemplate = $nstemplate -replace "%tools%", "$(Join-Path "tools" "**")"
+    $nstemplate = $nstemplate -replace "%year%", "$(Get-Date -format yyyy)"
+
     $nstemplate = $nstemplate -replace "%fileversion%", "$version"
-    $nstemplate = $nstemplate -replace "%description%", "$description"
-    $nstemplate = $nstemplate -replace "%hash%", "$hash"
-    $nstemplate = $nstemplate -replace "%downloadurl%", "$url"
-    $nstemplate = $nstemplate -replace "%param1%", "$param1"
-    $nstemplate = $nstemplate -replace "%param2%", "$param2"
-    $nstemplate = $nstemplate -replace "%toolsfilepath%", "$(Join-Path "tools" "**")"
-    $nstemplate = $nstemplate -replace "%copyrightyear%", "$(Get-Date -format yyyy)"
+    $nstemplate = $nstemplate -replace "%releaseinfo%", "$releaseinfo"
+    
+    $nstemplate = $nstemplate -replace "%filename32%", "$($32bit.filename)"
+    $nstemplate = $nstemplate -replace "%hash32%", "$($32bit.hash)"
+    $nstemplate = $nstemplate -replace "%url32%", "$($32bit.url)"
 
-    $nstemplate = $nstemplate -replace "%hash64%", "$hash64"
-    $nstemplate = $nstemplate -replace "%downloadurl64%", "$url64"
+    $nstemplate = $nstemplate -replace "%filename64%", "$($64bit.filename)"
+    $nstemplate = $nstemplate -replace "%hash64%", "$($64bit.hash)"
+    $nstemplate = $nstemplate -replace "%url64%", "$($64bit.url)"
 
-    $nstemplate | Out-File $(Join-Path "$tempfolder" "${name}.nuspec")
+    $nstemplate = $nstemplate -replace "%extraparam%", "$extraparam"
+
+    $nstemplate | Out-File $(Join-Path "$(TempFolder)" "${name}.nuspec")
 
     $files = Get-ChildItem -Path $templates -Filter "${name}_*"
     foreach ($file in $files) {
         if ($file.Name.EndsWith(".template")) {
             $outfilename = ($file.Name -replace ".{9}$" -replace ".*_")
-            Write-Host "Building template '$outfilename'"
+            Write-Host "Compiling template '$outfilename'..."
             $templater = Get-Content $(Join-Path "${templates}" "$($file.Name)") -Raw
 
             $templater = $templater -replace "%fileversion%", "$version"
-            $templater = $templater -replace "%description%", "$description"
-            $templater = $templater -replace "%hash%", "$hash"
-            $templater = $templater -replace "%downloadurl%", "$url"
-            $templater = $templater -replace "%param1%", "$param1"
-            $templater = $templater -replace "%param2%", "$param2"
+            $templater = $templater -replace "%releaseinfo%", "$releaseinfo"
 
-            $templater = $templater -replace "%hash64%", "$hash64"
-            $templater = $templater -replace "%downloadurl64%", "$url64"
+            $templater = $templater -replace "%filename32%", "$($32bit.filename)"
+            $templater = $templater -replace "%hash32%", "$($32bit.hash)"
+            $templater = $templater -replace "%url32%", "$($32bit.url)"
+
+            $templater = $templater -replace "%filename64%", "$($64bit.filename)"
+            $templater = $templater -replace "%hash64%", "$($64bit.hash)"
+            $templater = $templater -replace "%url64%", "$($64bit.url)"
+
+            $templater = $templater -replace "%extraparam%", "$extraparam"
             
-            $templater | Out-File $(Join-Path "${tempfolder}" "tools" "${outfilename}")
+            $templater | Out-File $(Join-Path "$(TempFolder)" "tools" "${outfilename}")
         }
         else {
             $newfilename = $file.Name -replace ".*_"
             Write-Host "Copying file '$newfilename'"
-            Copy-Item $(Join-Path "${templates}" "$($file.Name)") $(Join-Path "${tempfolder}" "tools" "$newfilename")
+            Copy-Item $(Join-Path "${templates}" "$($file.Name)") $(Join-Path "$(TempFolder)" "tools" "$newfilename")
         }
     }
 
     return $true
 }
 
+# Includes an EULA from a remote URL
+# Parameters:
+#     $url: The URL to the EULA
+#     $regexparse: The regex to parse the EULA from a web page (if applicable)
+# Returns:
+#     $true if the EULA was successfully included, $false otherwise
 function IncludeEULA($url, $regexparse) {
     $eula = Invoke-WebRequest -Uri $url
     if ($eula.StatusCode -ne 200) {
@@ -160,40 +186,45 @@ function IncludeEULA($url, $regexparse) {
         $licensefile = "LICENSE.md"
     }
     else {
-        $licensefile = "LICENSE.txt"
+        $licensefile = $url.Substring($url.LastIndexOf("/") + 1)
         DebugOut "EULA: $eula"
     }
 
     if ($eula.trim().length -eq 0) {
-        Write-Host "Failed to parse EULA from $url"
+        PackageError "Failed to parse EULA from $url"
         return $false
     }
 
-    $eulapath = Join-Path "${tempfolder}" "tools" "$licensefile"
+    $eulapath = Join-Path "$(TempFolder)" "tools" "$licensefile"
+    Write-Host "Writing EULA from $url to $eulapath"
     $eula | Out-File -Path $eulapath
     return $true
 }
 
-function IncludeFrom7zURL($url) {
-    $dlpath = Join-Path "${tempfolder}" "tools"
-    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
-    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-    $out = $(Join-Path "${temp}" "${randomstring}")
+# Includes files from a remote compressed archive
+# Parameters:
+#   $url: URL to the archive
+#   $filetype: Type of archive (zip, 7z, etc) according to the 7z tool
+# Returns:
+#   $true if the archive was downloaded and extracted successfully
+function IncludeZipFilesFromURL($url, $filetype) {
+    $dlpath = Join-Path "$(TempFolder)" "tools"
+    $out = CreateTempFileName
 
-    Write-Host "Downloading 7z file at $url to $out..."
+    Write-Host "Downloading compressed file at $url to $out..."
     Invoke-WebRequest -Uri $url -outfile $out
 
-    $result = 7z x $out -o"${dlpath}" -t7z -y
-
+    $result = 7z x "$out" -o"$dlpath" -t"$filetype" -y -bd
     if ($LASTEXITCODE -ne "0") {
-        PackageError "Error $LASTEXITCODE extracting 7z file for $tempfolder"
+        PackageError "Error $LASTEXITCODE extracting $filetype file for $(TempFolder)"
         return $false
     }
     return $true
 }
 
+# Removes a single subfolder if it is not empty and there are no other folders in the parent folder
 function RemoveSubfolder() {
-    $tpath = Join-Path "${tempfolder}" "tools"
+    $tpath = Join-Path "$(TempFolder)" "tools"
     $filelist = Get-ChildItem -Path $tpath -File -ErrorAction Ignore
     $folderlist = Get-ChildItem -Path $tpath -Directory -ErrorAction Ignore
 
@@ -204,87 +235,232 @@ function RemoveSubfolder() {
     }
 }
 
+# Downloads an installer from a remote URL and saves it to the specified folder
+# Creates a .ignore file to stop the installer from being shimmed
+# Parameters:
+#     $url: The URL to the file
+#     $filename: The name of the file to save
+# Returns:
+#     The filesize in bytes of the file
 function DownloadInstallerFile($url, $filename) {
-    $dlpath = Join-Path "${tempfolder}" "tools"
-    $fullpath = Join-Path $dlpath $filename
-    New-Item -ItemType Directory -Path $dlpath -ErrorAction Ignore | Out-Null
+    if ($null -eq $filename) {
+        $filename = $url.Substring($url.LastIndexOf("/") + 1)
+    }
+    $dlpath = Join-Path "$(TempFolder)" "tools" "$filename"
+    $result = DownloadFile $url $dlpath
 
-    Write-Host "Download installer file at $url to $fullpath"
-    
+    Write-Host "Create ignore file for $dlpath"
+    New-Item "${dlpath}.ignore" -type file -force | Out-Null
+
+    return $result
+}
+
+function DownloadRemoteFile($url, $filename) {
+    if ($null -eq $filename) {
+        $filename = $url.Substring($url.LastIndexOf("/") + 1)
+    }
+    $dlpath = Join-Path "$(TempFolder)" "tools" "$filename"
+    $result = DownloadFile $url $dlpath
+
+    return $result
+}
+
+# Downloads a file from the remote URL and saves it to the specified folder
+# Parameters:
+#     $url: The URL to the file
+#     $fullpath: The full file path to save the file to
+# Returns:
+#     The hash and filesize in bytes of the file
+function DownloadFile($url, $fullpath) {
+    $parent = Split-Path $fullpath -Parent
+    New-Item -ItemType Directory -Path $parent -ErrorAction Ignore | Out-Null
+
+    Write-Host "Download file at $url to $fullpath..."
     Invoke-WebRequest -Uri $url -outfile $fullpath
 
-    $filesize = (Get-Item $fullpath).Length
+    $ret = "" | Select-Object -Property hash, size, url, filename
+    $ret.hash = (Get-FileHash $fullpath).Hash
+    $ret.size = (Get-Item $fullpath).Length
+    $ret.url = $url
+    $ret.filename = Split-Path $fullpath -leaf
 
-    #create ignore for installer to stop it from being shimmed
-    New-Item "$fullpath.ignore" -type file -force | Out-Null
-
-    Write-Host "File Size `"$filesize`"" -ForegroundColor Green
+    DebugOut "File Size `"$($ret.size)`" Hash `"$($ret.hash)`""
     
-    return $filesize
+    return $ret
 }
 
-function DownloadFile($url, $out) {
-    Write-Host "Downloading File to `"$out`"..."
-    
-    Invoke-WebRequest -Uri $url -outfile $out
+# Loads a list of links from a URL or WebRequest object
+# Parameters:
+#     $webrequest: Either a URL or webrequest
+#     $filterlinks: The regex to parse the links from the web request
+#     $addlink: Adds an additional link to the list
+# Returns:
+#     $true if there are links (excluding link from $addlink), false otherwise
+function LinkList($webrequest, $filterlinks, $addlink) {
+    $script:linklist = ""
+    if ($webrequest.GetType().Name -eq "String") {
+        $webrequest = Invoke-WebRequest -Uri $webrequest
+    }
+    $ret = $webrequest.Links | Select-Object -ExpandProperty href 
 
-    $hash = (Get-FileHash $out).Hash
-    $file = (Get-Item $out).Length
+    if ($null -ne $filterlinks) {
+        $ret = $ret | Where-Object { $_ -match "$filterlinks" }
+    }
 
-    DebugOut "File Size `"$file`" Hash `"$hash`""
-    
-    return @($hash, $file)
+    if ($ret.length -eq 0) {
+        PackageError "No links found"
+        return $false
+    }
+    else {
+        if ($null -ne $addlink) {
+            $ret += $addlink
+        }
+        DebugOut "LinkList: $($ret)"
+        $script:linklist = $ret
+        return $true
+    }
 }
 
-function HashSizeAndContentsFromZipFileURL ($url) {
-    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
-    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-    $out = $(Join-Path "${temp}" "${randomstring}")
+# Fetches a link from the link list. 
+# Note: If the filter matches multiple results, only the first one will be returned.
+# Parameters:
+#     $filter: An index or regex of link to fetch
+# Returns:
+#     The link
+function GetLinkList($filter) {
+    if ($filter.GetType().Name -eq "Int32") {
+        $url = $linklist[$filter]
+    }
+    else {
+        $url = $linklist | Where-Object { $_ -match $filter } | Select-Object -First 1
+    }
+    $fulllink = PrefixRootURL $url
+    DebugOut "GetLinkList: $($fulllink)"
+    return PrefixRootURL $fulllink
+}
 
-    Write-Host "Downloading Zip File to `"$out`"..."
-    Invoke-WebRequest -Uri $url -outfile $out
-    $hash = (Get-FileHash $out).Hash
-    $filesize = (Get-Item $out).Length
-    
-    $zip = [IO.Compression.ZipFile]::OpenRead($out)
+function RemoteFileDetails($url) {
+    $location = CreateTempFileName
+    $details = DownloadFile $url $location
+
+    if ("$debug" -ne "true") {
+        Remove-Item -path $location
+        Write-Host "Removed temporary file `"$location`""
+    }
+
+    return $details
+}
+
+# Get the release info from a webpage.
+# Parameters:
+#     $url: The URL to the webpage
+#     $filter: A regex to filter the links to the release page.
+#              Must use named groups info and date for release date.
+#     $processchangelog: A boolean to indicate if the changelog should be processed
+# Returns:
+#     The processed release info
+function ObtainReleaseInfo($url, $filter, $processchangelog) {
+    $releaseinfo = Invoke-WebRequest -Uri $url
+    $processed = [regex]::match($releaseinfo.Content, $filter, [Text.RegularExpressions.RegexOptions]::Singleline)
+
+    $releaseinfo = $processed.Groups['info'].Value
+    $releasedate = $processed.Groups['date'].Value
+
+    return ProcessReleaseInfo $releaseinfo $releasedate $processchangelog
+}
+
+# Process release info from variables.
+# Parameters:
+#     $releaseinfo: The release info
+#     $releasedate: The release date
+#     $processchangelog: A boolean to indicate if the changelog should be processed
+# Returns:
+#     The processed release info
+function ProcessReleaseInfo($releaseinfo, $releasedate, $processchangelog) {
+    if ($processchangelog) {
+        $releaseinfo = ProcessChangelog $releaseinfo
+    }
+
+    if ($null -ne $releasedate) {
+        $releaseinfo = @"
+Released $releasedate
+
+$releaseinfo
+"@
+    }
+
+    return $releaseinfo
+}
+
+function RemoteFileZipDetails($url) {
+    $location = CreateTempFileName
+    $details = DownloadFile $url $location
+
+    $zip = [IO.Compression.ZipFile]::OpenRead($location)
     $filelist = $zip.Entries
     $zip.Dispose()
-    DebugOut "File Size `"$filesize`" Hash `"$hash`" File Count $($filelist.Count)"
+    DebugOut "File Count in Zip $($filelist.Count)"
+
+    $ret = "" | Select-Object -Property file, contents
+
+    $ret.file = $details
+    $ret.contents = $filelist
+
     if ("$debug" -ne "true") {
-        Remove-Item -path $out
-        Write-Host "Removed temporary file `"$out`""
+        Remove-Item -path $location
+        Write-Host "Removed temporary file `"$location`""
     }
-    return @($hash, $filesize, $filelist)
+
+    return $ret
 }
 
-function HashAndSizeFromFileURL ($url) {         
-    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
+# Gets a download URL for a release on GitHub
+# Parameters:
+#     $repo: The GitHub repository
+#     $filter: The filter to match for the download file
+# Returns:
+#     Object containing the download url, file size and version tag
+function GitHubRelease($repo, $filter) {
+    $url = "https://api.github.com/repos/$repo/releases/latest"
+    $releaseinfo = Invoke-WebRequest $url
+    $json = ConvertFrom-Json $releaseinfo.Content
 
-    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
-    $out = $(Join-Path "${temp}" "${randomstring}")
-
-    Write-Host "Downloading File to `"$out`"..."
-    Invoke-WebRequest -Uri $url -outfile $out
-    $hash = (Get-FileHash $out).Hash
-    $filesize = (Get-Item $out).Length
-    DebugOut "File Size `"$filesize`" Hash `"$hash`""
-    if ("$debug" -ne "true") {
-        Remove-Item -path $out
-        Write-Host "Removed temporary file `"$out`""
+    $ret = "" | Select-Object -Property version, url, size
+    $ret.version = $json.tag_name
+    foreach ($file in $json.assets) {
+        if ($file.browser_download_url -match "$filter") {
+            $ret.url = $file.browser_download_url
+            $ret.size = $file.size
+        }
     }
-    return @($hash, $filesize)
+    return $ret
+}
+
+# Gets json from a remote URL
+# Parameters:
+#     $url: The URL
+# Returns:
+#     The JSON object
+function JsonUri($uri) {
+    $json = Invoke-WebRequest -Uri $uri -Method Get -ContentType "application/json"
+    return ConvertFrom-Json $json.Content
+}
+
+function CreateTempFileName() {
+    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
+    New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
+    return $(Join-Path "${temp}" "${randomstring}")
 }
 
 function ExtractZipFromURL ($url) {
-    $randomstring = ( -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ }))
-    $out = $(Join-Path "${temp}" "${randomstring}")
+    $out = CreateTempFileName
     try {
         New-Item -ItemType Directory -Path "$temp" -ErrorAction Ignore | Out-Null
         Write-Host "Downloading File to `"$out`"..."
         Invoke-WebRequest -Uri $url -outfile $out
         $size = (Get-Item $out).length
         Write-Host "Downloaded File - $size bytes, Extracting file..."
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($out, "${tempfolder}/tools")
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($out, "$(TempFolder)/tools")
         Write-Host "Extraction complete"
         
         Write-Host "Removed temporary file `"$out`""
@@ -292,7 +468,7 @@ function ExtractZipFromURL ($url) {
     }
     catch {
         Write-Host "Error Extracting Zip From `"$url`""
-        PackageError "Package: $tempfolder`nError Extracting from URL: $url"
+        PackageError "Package: $(TempFolder)`nError Extracting from URL: $url"
         return $false
     }
     finally {
@@ -300,6 +476,12 @@ function ExtractZipFromURL ($url) {
     }
 }
 
+# Pushes the package to chocolatey community repository
+# Parameters:
+#     $attempt: The attempt number
+#     $backoff: The backoff time in seconds
+# Returns:
+#     $true if successful, $false failed to push after attempts
 function DoPush ($attempt, $backoff) {
     $attempt = ($attempt + 1)
     if ($null -eq $backoff) {
@@ -314,7 +496,7 @@ function DoPush ($attempt, $backoff) {
     if ($LASTEXITCODE -ne "0") {
         Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
         if ($attempt -gt $MAX_PUSH_ATTEMPTS) {
-            PackageError "Failed to push package $tempfolder after $maxattempts attempts"
+            PackageError "Failed to push package $(TempFolder) after $maxattempts attempts"
             return $false
         }
         else {
@@ -326,25 +508,29 @@ function DoPush ($attempt, $backoff) {
     return $true
 }
 
-function PackAndClean ($ignorepushresult) {
-    Set-Location -Path "$tempfolder"
-    Write-Host "Packing `"$tempfolder`"..."
+# Packs the package and cleans the temporary folder
+# Returns:
+#     $true if successful, $false if failed
+function PackAndClean () {
+    Set-Location -Path "$(TempFolder)"
+    Write-Host "Packing `"$(TempFolder)`"..."
     $result = (choco pack)
     if ($LASTEXITCODE -ne "0") {
+        Write-Host "Pack return exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n-----------"
         if ("$debug" -ne "true") {
-            Write-Host "Pack return exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n-----------"
-            PackageError "Package $tempfolder Pack Error`n$result"
-            Remove-Item -Path "$tempfolder" -Recurse -Force
+            PackageError "Package $(TempFolder) Pack Error`n$result"
+            Remove-Item -Path "$(TempFolder)" -Recurse -Force
         }
         return $false
     }
     if ("$debug" -ne "true") {
         if (DoPush 0) {
             Write-Host "Push successfull"
-        } else {
+        }
+        else {
             if ("$debug" -ne "true") {
                 Write-Host "Cleaning..."
-                Remove-Item -Path "$tempfolder" -Recurse -Force
+                Remove-Item -Path "$(TempFolder)" -Recurse -Force
             }
             return $false
         }
@@ -352,104 +538,64 @@ function PackAndClean ($ignorepushresult) {
     Set-Location -Path $temp
     if ("$debug" -ne "true") {
         Write-Host "Cleaning..."
-        Remove-Item -Path "$tempfolder" -Recurse -Force
+        Remove-Item -Path "$(TempFolder)" -Recurse -Force
     }
     return $true
 }
 
 function ItemEmpty ($obj, $packagename, $objname) {
     if ($obj -eq "") {
-        PackageError "Package: $packagename`nEmpty Var: $objname"
+        PackageError "Empty Var: $objname"
         return $true
     } 
     return $false
 }
 
-function ItemNotDefined ($obj, $packagename, $objname) {
-    if ($null -eq $obj) {
-        PackageError "Package: $packagename`nNull Var: $objname"
-        return $true
-    } 
-    return $false
-}
-
-function PackageName ($title) {
-    Write-Host "[$title]" -ForegroundColor Yellow
-}
-
-function CheckSkip ($version) {
-    if ($version -eq "~") {
-        Write-Host "Skip Updating Package"
-        return $true
+function InitPackage ($packagename) {
+    $script:templatename = $packagename
+    Write-Host "[$packagename]" -ForegroundColor Yellow
+    $script:lastversion = Get-Content -Path $(VersionFile) -Raw -ErrorAction Ignore
+    if ($lastversion -eq "~") {
+        Write-Host "Skip updating package"
+        return $false
     }
-    return $false
+    return $true
 }
 
-function GetLastVersion ($verfile) {
-    Get-Content -Path $(Join-Path "${datapath}" "${verfile}") -Raw -ErrorAction Ignore
+function TempFolder () {
+    Join-Path $temp $templatename
 }
 
+function PackageUpdated ($size) {
+    if ("$debug" -ne "true") {
+        $version | Out-File $(VersionFile) -NoNewline
+    }
+    if ($null -ne $size) {
+        Write-Host "`"$templatename`" updated to `"$version`" [Size: $(GetFileSize $size)]"
+        SendPushover "Package Updated" "$templatename updated to $version [$(GetFileSize $size)]"
+    }
+    else {
+        Write-Host "`"$templatename`" updated to `"$version`""
+        SendPushover "Package Updated" "$templatename updated to $version"
+    }
+}
+
+function VersionFile () {
+    $(Join-Path "${datapath}" "${templatename}.ver")
+}
+
+# Converts files from bytes to megabytes
+# Parameters:
+#     $bytesize: The size in bytes
+# Returns:
+#     The size in megabytes
 function GetFileSize ($bytesize) {
     return (($bytesize / 1MB).ToString("0.00") + "MB")
 }
 
-function ConvertDashVersion ($version, $dashpostfix) {
-    $splitver = $version.Split('-')
-    $res = $splitver[0] + "-" + $dashpostfix + $splitver[1]
-    $res
-}
-
-function NotePackageUpdateMsg ($version, $verfile, $message) {
-    if ("$debug" -ne "true") {
-        $version | Out-File $(Join-Path "${datapath}" "${verfile}") -NoNewline
-    }
-    SendPushover "Package Updated" "$message"
-    Write-Host "Updated to `"$version`""
-}
-
-function NotePackageUpdate ($version, $verfile, $name, $size) {
-    if ("$debug" -ne "true") {
-        $version | Out-File $(Join-Path "${datapath}" "${verfile}") -NoNewline
-    }
-    if ($null -ne $size) {
-        Write-Host "`"$name`" updated to `"$version`" [Size: $size]"
-        SendPushover "Package Updated" "$name updated to $version [$size]"
-    }
-    else {
-        Write-Host "`"$name`" updated to `"$version`""
-        SendPushover "Package Updated" "$name updated to $version"
-    }
-}
-
 function PackageError($message) {
-    Write-Host "ERROR: $message"
-    SendPushover "Package Error" "$message"
-}
-
-function VersionNotNew($oldversion, $newversion) {
-    if ($oldversion -eq $newversion) {
-        Write-Host "No New Version"
-        return $true
-    }
-    return $false
-}
-
-function VersionNotValid($version, $packagename) {
-    if ($version -match "[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+? | \-[a-z]+[0-9]+)?") {
-        return $false
-    }
-    Write-Host "Cannot validate version number"
-    PackageError "Package: $packagename`nInvalid Version: $version"
-    return $true
-}
-
-function DownloadNotValid($url, $packagename) {
-    if ($null -eq $url) {
-        Write-Host "URL is invalid"
-        PackageError "Package: $packagename`nURL Empty"
-        return $true
-    }
-    return $false
+    Write-Host "ERROR: $message" -ForegroundColor Red
+    SendPushover "Package Error: $($packagename)" "$message"
 }
 
 function SendPushover($title, $message) {
@@ -467,11 +613,18 @@ function DebugOut ($message) {
     }
 }
 
+# Processes any change log notes or EULAs from web page scrapes
+# Parameters:
+#     $data: The data to process
+#     $respnl: Respect new lines
+#     $spacing: Data has excessive spacing
+# Returns:
+#     The processed data
 function ProcessChangelog ($data, $respnl, $spacing) {
 
-    $nl=""
+    $nl = ""
     if ($respnl -eq $true) {
-        $nl="`r`n"
+        $nl = "`r`n"
         DebugOut "Respect Newlines"
 
         $data = $data -replace "`r", ""
@@ -486,31 +639,31 @@ function ProcessChangelog ($data, $respnl, $spacing) {
     $data = $data -Replace "</li>", "" #Remove closing li tag
     $data = $data -Replace "<li>", "*" #Convert to *
     $data = $data -replace "&#8226;", "*" #Convert to *
-            $data = $data -replace "<b>-</b>", "*" #Convert to *
-            $data = $data -replace "&bull;", "*" #Convert to *
-            $data = $data -replace "<br />", "$nl" #Remove line break tag
-            $data = $data -replace "<br/>", "$nl" #Remove line break tag
-            $data = $data -replace "<br>", $nl #Remove line break tag
-            $data = $data -replace "</p>", "" #Remove closing p tag
-            $data = $data -replace "<ul>", "" #Remove ul tag
-            $data = $data -replace "</ul>", "" #Remove ul tag
-            $data = $data -replace "</span>", "" #Remove span tag
-            $data = $data -replace "<span.*?>", "" #Remove span tag
-            $data = $data -replace "<div.*?>", "" #Remove div tag
-            $data = $data -replace "</div>", "" #Remove div tag
-            $data = $data -creplace '\s*\*\s*(\r?\n|$)', '' #Remove any empty lines on lines of their own
-    
-            $data = $data -Replace "<h1>", "# "
-            $data = $data -Replace "<h2>", "## "
-            $data = $data -Replace "</h1>", ""
-            $data = $data -Replace "</h2>", ""
+    $data = $data -replace "<b>-</b>", "*" #Convert to *
+    $data = $data -replace "&bull;", "*" #Convert to *
+    $data = $data -replace "<br />", "$nl" #Remove line break tag
+    $data = $data -replace "<br/>", "$nl" #Remove line break tag
+    $data = $data -replace "<br>", $nl #Remove line break tag
+    $data = $data -replace "</p>", "" #Remove closing p tag
+    $data = $data -replace "<ul>", "" #Remove ul tag
+    $data = $data -replace "</ul>", "" #Remove ul tag
+    $data = $data -replace "</span>", "" #Remove span tag
+    $data = $data -replace "<span.*?>", "" #Remove span tag
+    $data = $data -replace "<div.*?>", "" #Remove div tag
+    $data = $data -replace "</div>", "" #Remove div tag
+    $data = $data -creplace '\s*\*\s*(\r?\n|$)', '' #Remove any empty lines on lines of their own
 
-            $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
-            $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
-            $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
+    $data = $data -Replace "<h1>", "# "
+    $data = $data -Replace "<h2>", "## "
+    $data = $data -Replace "</h1>", ""
+    $data = $data -Replace "</h2>", ""
 
-            $data = $data.Trim() # Trim spaces from stard and end of string
+    $data = $data -creplace '(?m)^\*\S+', '*' #Make sure any lines starting with * has one whitespace character after
+    $data = $data -replace "<p>", "`n" #Make sure any P tag creates a new line
+    $data = (($data -Split "`n").Trim() -Join "`n") #Split all lines, trim them and then rejoin them
 
-            DebugOut "Changelog Process:`n$data`n----------"
-            return $data
-        }
+    $data = $data.Trim() # Trim spaces from stard and end of string
+
+    DebugOut "Changelog Process:`n$data`n----------"
+    return $data
+}

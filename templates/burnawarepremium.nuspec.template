@@ -8,7 +8,7 @@
     <title>Burnaware Premium</title>
     <authors>Burnaware</authors>
     <projectUrl>http://www.burnaware.com/</projectUrl>
-    <copyright>%copyrightyear% Burnaware</copyright>
+    <copyright>%year% Burnaware</copyright>
     <licenseUrl>http://www.burnaware.com/eula.html</licenseUrl>
 	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/burnaware.png</iconUrl>
     <docsUrl>http://www.burnaware.com/online-manual.html</docsUrl>
@@ -18,6 +18,6 @@
     <releaseNotes>%description%</releaseNotes>
   </metadata>
   <files>
-    <file src="%toolsfilepath%" target="tools" />
+    <file src="%tools%" target="tools" />
   </files>
 </package>

@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop';
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$file       = "$toolsDir\%downloadurl%"
+$file       = "$toolsDir\%filename32%"
 
 $packageArgs = @{
   packageName   = $env:ChocolateyPackageName

@@ -1,50 +1,23 @@
-PackageName "ROCCAT Swarm"
+if (InitPackage("roccatswarm")) {
+    $api = JsonUri("https://api.roccat-neon.com/device/Support/Downloads/en/202/v2")
 
-#Common Script Vars
-$templatename = "roccatswarm"
-$tempfolder = "$temp/$templatename/"
-$verfile = "$templatename.ver"
-$oldversion = GetLastVersion $verfile
+    if (SetVersion($api.download.version)) {
+        
+        $release = "Released $($api.download.release)"
+        $changelogjson = $api.download.changelog.'ROCCAT® Swarm'[0].changelog;
+        $changelogdata = Join-String -InputObject $changelogjson -Separator "`r`n"
 
-if (CheckSkip $oldversion) {return}
+        $releaseinfo = ProcessReleaseInfo $changelogdata $release $true
 
-$downloadapi = (Invoke-WebRequest "https://api.roccat-neon.com/device/Support/Downloads/en/202/v2").Content
-$apijson = ConvertFrom-Json $downloadapi
+        $details = RemoteFileZipDetails $api.download.url
 
-$item = $apijson.download;
+        $installfile = $details.contents | Where-Object { $_.FullName -like '*.exe' } | Select-Object -First 1
+        Write-Host "Install file: $installfile"
 
-if (ItemNotDefined $item $templatename "item") {return}
-
-$version = $item.version
-$release = "Released $($item.release)"
-
-if (VersionNotValid $version $templatename) {return}
-
-if (VersionNotNew $oldversion $version) {return}
-
-$changelogjson = $item.changelog.'ROCCAT® Swarm'[0].changelog;
-
-$changelogdata = Join-String -InputObject $changelogjson -Separator "`r`n"
-
-$changelog = @"
-$release
-
-$changelogdata
-"@
-
-DebugOut "Changelog: $changelog"
-
-$downloadurl = $item.url
-
-$fileinfo = HashSizeAndContentsFromZipFileURL $downloadurl
-$filehash = $fileinfo[0]
-$filesize = $fileinfo[1]
-$files = $fileinfo[2]
-
-$exes = $files | Where-Object { $_.FullName -like '*.exe' }
-$installfile = $exes[0].FullName
-
-if (!(BuildTemplateParam $templatename $filehash $downloadurl $version $changelog $installfile "")) {return}
-if (!(PackAndClean)) {return}
-
-NotePackageUpdate $version $verfile $templatename (GetFileSize $filesize)
+        if (CompileTemplates $details.file $null $releaseinfo $installfile) {
+            if (PackAndClean) {
+                PackageUpdated
+            }
+        }
+    }
+}
