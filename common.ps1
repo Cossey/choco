@@ -527,6 +527,7 @@ function PackAndClean () {
     $result = (choco pack)
     if ($LASTEXITCODE -ne "0") {
         Write-Host "Pack return exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n-----------"
+        Set-Location -Path $temp
         if ("$debug" -ne "true") {
             PackageError "Pack Error`n$result"
             Remove-Item -Path "$(TempFolder)" -Recurse -Force
