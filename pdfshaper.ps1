@@ -13,7 +13,7 @@ $freeurl = "/downloads/pdfshaper_cfree_${onlineversion}.exe"
 
 if (!(LinkList $currentversion ".*\.exe$" $freeurl)) { return }
 
-$releaseinfo = ObtainReleaseInfo $whatsnewurl "<p class=`"text-muted`">Released (?<date>.*?)</p>(?<info>.*?)<script async" $true
+$releaseinfo = ObtainReleaseInfo $whatsnewurl "<p class=`"text-muted`">Released (?<date>.*?)</p>(?<info>.*?)(?:<script async|<a href=\`"download.html\`")" $true
 if (ItemEmpty $releaseinfo "PDF Shaper" "Release Info") { return }
 
 # Pdf Shaper Packages
