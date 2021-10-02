@@ -10,7 +10,7 @@
     <projectUrl>http://www.pdfshaper.com/</projectUrl>
     <copyright>%year% Burnaware</copyright>
     <licenseUrl>http://www.pdfshaper.com/eula.html</licenseUrl>
-	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/pdfshaper.png</iconUrl>
+	  <iconUrl>https://rawcdn.githack.com/Cossey/storage/b42db7c4f60ee86ff3e7e43bb3dc43e526bc3dcc/images/logos/pdfshaper.png</iconUrl>
     <docsUrl>http://www.pdfshaper.com/online-manual.html</docsUrl>
     <tags>pdfshaper pdf cli word</tags>
     <summary>PDF Shaper makes it simple to split, merge, watermark, sign, optimize, convert, encrypt and decrypt your PDF documents.</summary>

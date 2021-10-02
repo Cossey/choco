@@ -10,7 +10,7 @@
     <projectUrl>http://www.burnaware.com/</projectUrl>
     <copyright>%year% Burnaware</copyright>
     <licenseUrl>http://www.burnaware.com/eula.html</licenseUrl>
-	  <iconUrl>https://raw.githubusercontent.com/Cossey/storage/master/images/logos/burnaware.png</iconUrl>
+	  <iconUrl>https://rawcdn.githack.com/Cossey/storage/b42db7c4f60ee86ff3e7e43bb3dc43e526bc3dcc/images/logos/burnaware.png</iconUrl>
     <docsUrl>http://www.burnaware.com/online-manual.html</docsUrl>
     <tags>burnaware cd dvd iso</tags>
     <summary>BurnAware is a full-featured and free burning software to create CD, DVD and Blu-ray of all types, including M-Disc.</summary>

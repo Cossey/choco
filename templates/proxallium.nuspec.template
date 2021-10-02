@@ -8,7 +8,7 @@
     <title>ProxAllium</title>
     <authors>Damon Harris</authors>
     <projectUrl>https://proxallium.dtw.tools/</projectUrl>
-    <iconUrl>https://download.tuxfamily.org/proxallium/icons/256.png</iconUrl>
+    <iconUrl>https://rawcdn.githack.com/Cossey/storage/c5f737df624d86ec454ccc1c0066cdf19fc497dc/images/logos/proxallium.png</iconUrl>
     <copyright>MIT License</copyright>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/DcodingTheWeb/ProxAllium</projectSourceUrl>
@@ -21,7 +21,6 @@
 **_Requires Tor to function, you can get it from the `tor` or `tor-browser` bundle packages._**
       
 **Please note: The package may be flagged by VirusTotal as malicious.** This application uses AutoIt scripting, which malicious parties have used in the past, and as a result some Vendors flag software built from AutoIt as a Trojan or Malware. *You can view the software [source code](https://github.com/DcodingTheWeb/ProxAllium/) and VirusTotal detection details and draw your own conclusions as to the validity of the results.* For more information please refer to the following links:  
-      
 [Comment by the Developer](https://github.com/chocolatey-community/chocolatey-package-requests/issues/1062#issuecomment-919046172) | [AutoIt and Malware](https://www.autoitscript.com/wiki/AutoIt_and_Malware) | [Are my AutoIt EXEs really infected?](https://www.autoitscript.com/forum/topic/34658-are-my-autoit-exes-really-infected/)
 </description>
   </metadata>
