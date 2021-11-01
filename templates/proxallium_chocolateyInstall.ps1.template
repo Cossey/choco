@@ -1,10 +1,12 @@
 $ErrorActionPreference = 'Stop'; # stop on all errors
 $packageName = $env:ChocolateyPackageName
 
+Get-ToolsLocation
+
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $7zFile = Join-Path $toolsDir '%filename32%'
 
-$installDir = Join-Path $([Environment]::GetFolderPath('ApplicationData')) $packageName
+$installDir = Join-Path $env:ChocolateyToolsLocation $packageName
 $installLocation = Join-Path $installDir "ProxAllium.exe"
 
 $packageArgs = @{
