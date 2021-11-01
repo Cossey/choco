@@ -11,6 +11,8 @@ function LoadEnvVars () {
      
     DebugOut "DEBUGGING IS ENABLED!"
 
+    LoadEnvVar "PACKAGES"
+
     LoadEnvVar "DELAY"
     LoadEnvVar "MAX_PUSH_ATTEMPTS" 1
     LoadEnvVar "CKEY"
@@ -507,7 +509,8 @@ function DoPush ($attempt, $backoff) {
             $pushres = DoPush $attempt $backoff
             return $pushres
         }
-    } else {
+    }
+    else {
         return $true
     }
 }
@@ -567,6 +570,17 @@ function InitPackage ($packagename) {
     $script:templatename = $packagename
     Write-Host "[$packagename]" -ForegroundColor Yellow
     $script:lastversion = Get-Content -Path $(VersionFile) -Raw -ErrorAction Ignore
+
+    if ($packages) {
+        if ($packages.Split(",").Contains($packagename)) {
+            return $true
+        }
+        else {
+            Write-Host "Package not in Packages Environment Variable, ignoring"
+            return $false
+        }
+    }
+
     if ($lastversion -eq "~") {
         Write-Host "Skip updating package"
         return $false
@@ -617,7 +631,7 @@ function SendPushover($title, $message) {
         Write-Host "Pushover Ignored: No AKEY or UKEY provided"
     }
     else {
-       $response = Send-Pushover -Token $AKEY -User $UKEY -MessageTitle $title -Message $message
+        $response = Send-Pushover -Token $AKEY -User $UKEY -MessageTitle $title -Message $message
     }
 }
 
