@@ -1,4 +1,3 @@
-$local:datapath = "/data"
 $local:templates = "${PSScriptRoot}/templates"
 $local:temp = "${PSScriptRoot}/temp"
 

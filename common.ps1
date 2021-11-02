@@ -12,7 +12,7 @@ function LoadEnvVars () {
     DebugOut "DEBUGGING IS ENABLED!"
 
     LoadEnvVar "PACKAGES"
-
+    LoadEnvVar "DATAPATH" "/data"
     LoadEnvVar "DELAY"
     LoadEnvVar "MAX_PUSH_ATTEMPTS" 1
     LoadEnvVar "CKEY"
