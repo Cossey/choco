@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
+$ProgramsMenu = $([Environment]::GetFolderPath('CommonPrograms'))
 
-$installDir = Join-Path $([Environment]::GetFolderPath('ApplicationData')) $packageName
+$installDir = Join-Path (Get-ToolsLocation) $packageName
 
 Remove-Item $installDir -Recurse
-Remove-Item "$([Environment]::GetFolderPath('Programs'))\ProxAllium.lnk"
+Remove-Item "$ProgramsMenu\ProxAllium.lnk"

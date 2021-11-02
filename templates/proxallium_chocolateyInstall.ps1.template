@@ -1,27 +1,23 @@
 $ErrorActionPreference = 'Stop'; # stop on all errors
 $packageName = $env:ChocolateyPackageName
 
-Get-ToolsLocation
-
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $7zFile = Join-Path $toolsDir '%filename32%'
 
-$installDir = Join-Path $env:ChocolateyToolsLocation $packageName
-$installLocation = Join-Path $installDir "ProxAllium.exe"
+$installDir = Join-Path (Get-ToolsLocation) 'ProxAllium'
+$exePath = Join-Path $installDir "ProxAllium.exe"
+
+$ProgramsMenu = $([Environment]::GetFolderPath('CommonPrograms'))
 
 $packageArgs = @{
     PackageName = $packageName
-    Destination = $installDir
+    Destination = $env:ChocolateyToolsLocation
     FileFullPath = $7zFile
+    SpecificFolder = 'ProxAllium'
 }
 
-Get-ChocolateyUnzip @packageArgs
+$null = Get-ChocolateyUnzip @packageArgs
 
-$installDirDeep = Join-Path $installDir 'ProxAllium'
-if (Test-Path $installDirDeep) {
-    Move-Item -Path $(Join-Path $installDirDeep '*') -Destination $installDir
-    Remove-Item -Path $installDirDeep
-}
 Remove-Item $7zFile
 
-Install-ChocolateyShortcut -shortcutFilePath "$([Environment]::GetFolderPath('Programs'))\ProxAllium.lnk" -targetPath "$installLocation" -description "A GUI frontend for Tor."
+Install-ChocolateyShortcut -shortcutFilePath "$ProgramsMenu\ProxAllium.lnk" -targetPath "$exePath" -description "A GUI frontend for Tor."
