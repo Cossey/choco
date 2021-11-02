@@ -593,6 +593,8 @@ function TempFolder () {
 }
 
 function PackageUpdated ($size) {
+    Set-Location -Path ${PSScriptRoot}
+    
     if ("$debug" -ne "true") {
         $version | Out-File $(VersionFile) -NoNewline
     }
