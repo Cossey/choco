@@ -20,7 +20,7 @@ $installArgs = @{
   packageName  = $env:ChocolateyPackageName
   fileType     = 'exe'
   file          = "${env:TEMP}/roccatswarm/%extraparam%"
-  silentArgs   = "/s /f1`"$response`""
+  silentArgs   = "/S /v/qn /f1`"$response`""
 }
 
 Install-ChocolateyInstallPackage @installArgs
