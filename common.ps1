@@ -11,8 +11,13 @@ function LoadEnvVars () {
      
     DebugOut "DEBUGGING IS ENABLED!"
 
+    $DefDataPath = "/data"
+    if ($IsWindows) {
+        $DefDataPath = ".\data"
+    }
+
     LoadEnvVar "PACKAGES"
-    LoadEnvVar "DATAPATH" "/data"
+    LoadEnvVar "DATAPATH" $DefDataPath
     LoadEnvVar "DELAY"
     LoadEnvVar "MAX_PUSH_ATTEMPTS" 1
     LoadEnvVar "CKEY"
@@ -109,6 +114,16 @@ function PrefixRootURL ($url) {
         $url = $rooturl + $url
     }
     return $url
+}
+
+function ReadChocoError ($output) {
+    $outall = $output.Split("|")[-1]
+
+    $isHTTP = $outall -match ".*error\: \(([0-9]{3})\).*"
+    if ($isHTTP) {
+        $HTTPCode = $matches[1]
+        return $HTTPCode
+    }
 }
 
 function CompileTemplates ($32bit, $64bit, $releaseinfo, $extraparam) {
@@ -497,7 +512,35 @@ function DoPush ($attempt, $backoff) {
     Write-Host "Pushing (attempt $attempt)..."
     $result = (choco push --api-key=$CKEY -dv)
     if ($LASTEXITCODE -ne "0") {
-        Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------`n$result`n----------"
+        $errtype = ReadChocoError($result)
+        Write-Host "Exit code $LASTEXITCODE at $(Get-Date)`n-----------"
+        if ($null -ne $errtype) {
+            $outmsg = $result
+            $isActuallyOkay = $false
+            switch ($errtype) {
+                "401" {
+                    $outmsg = "Invalid API key"
+                    break
+                }
+                "404" {
+                    $outmsg = "Package not found"
+                    break
+                }
+                "409" {
+                    $outmsg = "Package already exists"
+                    $isActuallyOkay = $true
+                    break
+                }
+            }
+            Write-Host "$outmsg`n----------"
+            if ($isActuallyOkay) {
+                PackageError "$outmsg"
+                return $true
+            }
+        } else {
+            Write-Host "$result`n----------"
+        }
+        
         if ($attempt -ge $MAX_PUSH_ATTEMPTS) {
             PackageError "Failed to push package after $MAX_PUSH_ATTEMPTS attempts"
             Start-Sleep -Seconds 5
